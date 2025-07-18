@@ -83,10 +83,8 @@ const Page = () => {
       ref={main}
       className="about-page bg-white w-full h-full min-h-screen"
     >
-      <section className="h-screen flex items-center justify-center">
-        <h2 className="text-4xl font-bold text-gray-800">
-          Section 1: About Us
-        </h2>
+      <section className="h-screen bg-[#111] flex items-center justify-center">
+        <h1 className="filled-bordered-text">design</h1>
       </section>
       <section className="h-screen flex items-center justify-center">
         <h2 className="text-4xl font-bold text-gray-800">

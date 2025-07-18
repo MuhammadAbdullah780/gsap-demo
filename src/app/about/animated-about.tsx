@@ -33,9 +33,10 @@ export function AnimatedAbout() {
   // Calculate the index of the last char in the first word
   const firstWordLastCharIndex = arr[0].length - 1;
 
-  // Find the index of "and" and "development"
+  // Find the index of "and", "development", and "design"
   const andIdx = arr.findIndex((w) => w === "and");
   const developmentIdx = arr.findIndex((w) => w === "development");
+  const designIdx = arr.findIndex((w) => w === "design");
 
   // --- SVG Animation Start: when the first char of "and" is revealed ---
   // Calculate the global char index of the first char of "and"
@@ -51,6 +52,22 @@ export function AnimatedAbout() {
   // Track SVG scale for width hiding
   const [svgScale, setSvgScale] = useState(0);
 
+  // --- For "design" word: calculate its global char indices ---
+  let designStartCharIdx = 0;
+  for (let i = 0; i < designIdx; i++) {
+    designStartCharIdx += arr[i].length;
+  }
+  const designEndCharIdx = designStartCharIdx + arr[designIdx].length - 1;
+
+  // --- NEW: Calculate the global char index where "design" starts revealing ---
+  // We'll reveal all chars up to the end of "through", then reveal "design" one-by-one as the cursor crosses it
+  let throughIdx = arr.findIndex((w) => w === "through");
+  let designRevealStartCharIdx = 0;
+  for (let i = 0; i <= throughIdx; i++) {
+    designRevealStartCharIdx += arr[i].length;
+  }
+  // designRevealStartCharIdx is the global char index where "design" should start revealing
+
   useGSAP(
     () => {
       const chars = gsap.utils.toArray<HTMLSpanElement>(".headline .char");
@@ -62,7 +79,7 @@ export function AnimatedAbout() {
       if (!section) return;
 
       chars.forEach((el) => {
-        gsap.set(el, { color: baseColor, background: "none" });
+        gsap.set(el, { color: baseColor, background: "none", WebkitTextStroke: "", textStroke: "" });
       });
 
       // Set initial SVG state: scale 0 (hidden)
@@ -71,32 +88,81 @@ export function AnimatedAbout() {
         setSvgScale(0);
       }
 
-      // Increase duration per char for slower reveal
+      // Timeline: 
+      // 1. Reveal up to "through" char-by-char
+      // 2. Reveal "design" char-by-char as the cursor crosses it
+      // 3. Continue revealing "and" and "development" char-by-char
+
+      const charsBeforeDesign = designRevealStartCharIdx;
+      const designCharsCount = arr[designIdx].length;
+      const charsAfterDesign = chars.length - (designRevealStartCharIdx + designCharsCount);
+
       const perCharDuration = 0.35;
-      const totalDuration = perCharDuration * chars.length;
+      const totalDuration =
+        charsBeforeDesign * perCharDuration +
+        designCharsCount * perCharDuration +
+        charsAfterDesign * perCharDuration;
 
       // SVG scaling should start when we start highlighting the first char of "and"
-      const svgAnimStart = svgAnimStartCharIdx * perCharDuration;
+      // But since the timeline is now non-linear, we need to recalculate the time offset for SVG
+      // Find the timeline time when "and" starts
+      let andStartCharIdx = 0;
+      for (let i = 0; i < andIdx; i++) {
+        andStartCharIdx += arr[i].length;
+      }
+      let svgAnimStart =
+        andStartCharIdx <= designRevealStartCharIdx
+          ? andStartCharIdx * perCharDuration
+          : charsBeforeDesign * perCharDuration +
+            (andStartCharIdx - (designRevealStartCharIdx + designCharsCount)) * perCharDuration;
       const svgAnimEnd = totalDuration;
       const svgAnimDuration = svgAnimEnd - svgAnimStart;
 
       const tl = gsap.timeline({
         paused: true,
-        defaults: { duration: perCharDuration, ease: "none" },
+        defaults: { ease: "none" },
         onUpdate: () => {
           let lastWhite = -1;
 
           const prog = tl.progress();
-          const total = chars.length;
-          const exact = prog * total;
-          const intPart = Math.floor(exact);
+          const timelineTotal = totalDuration;
+          const currentTime = prog * timelineTotal;
 
+          // 1. Reveal up to "through" char-by-char
+          // 2. Reveal "design" char-by-char as the cursor crosses it
+          // 3. Continue revealing rest
+
+          let whiteCharCount = 0;
+          if (currentTime < charsBeforeDesign * perCharDuration) {
+            // Still revealing up to "through"
+            whiteCharCount = Math.floor(currentTime / perCharDuration);
+          } else if (
+            currentTime >= charsBeforeDesign * perCharDuration &&
+            currentTime < (charsBeforeDesign + designCharsCount) * perCharDuration
+          ) {
+            // Revealing "design" one-by-one
+            const designTime = currentTime - charsBeforeDesign * perCharDuration;
+            const designCharsRevealed = Math.floor(designTime / perCharDuration);
+            whiteCharCount = designRevealStartCharIdx + designCharsRevealed;
+          } else {
+            // After "design", continue revealing rest
+            const afterDesignTime =
+              currentTime - (charsBeforeDesign + designCharsCount) * perCharDuration;
+            const afterDesignChars = Math.floor(afterDesignTime / perCharDuration);
+            whiteCharCount = designRevealStartCharIdx + designCharsCount + afterDesignChars;
+          }
+
+          // Clamp to total chars
+          if (whiteCharCount > chars.length) whiteCharCount = chars.length;
+
+          // Set color for all chars
           chars.forEach((el, i) => {
-            if (i < intPart) {
-              gsap.set(el, { color: highlightColor, background: "none" });
+            // For "design" chars, only reveal as the cursor crosses them
+            if (i < whiteCharCount) {
+              gsap.set(el, { color: highlightColor, background: "none", WebkitTextStroke: "", textStroke: "" });
               lastWhite = i;
             } else {
-              gsap.set(el, { color: baseColor, background: "none" });
+              gsap.set(el, { color: baseColor, background: "none", WebkitTextStroke: "", textStroke: "" });
             }
           });
 
@@ -108,11 +174,56 @@ export function AnimatedAbout() {
             const scale = gsap.getProperty(svgRef.current, "scale") as number;
             setSvgScale(scale ?? 0);
           }
+
+          // --- When "design" is fully revealed, apply special styles to its chars ---
+          if (lastWhite >= designEndCharIdx) {
+            for (let i = designStartCharIdx; i <= designEndCharIdx; i++) {
+              gsap.set(chars[i], {
+                color: "#131518",
+                WebkitTextStroke: "1px #D1D1D1",
+                textStroke: "1px #D1D1D1",
+              });
+            }
+          } else {
+            // Remove the special styles if not fully revealed
+            for (let i = designStartCharIdx; i <= designEndCharIdx; i++) {
+              // Only set color to highlight if the char is revealed, otherwise baseColor
+              if (i < whiteCharCount) {
+                gsap.set(chars[i], {
+                  color: highlightColor,
+                  WebkitTextStroke: "",
+                  textStroke: "",
+                });
+              } else {
+                gsap.set(chars[i], {
+                  color: baseColor,
+                  WebkitTextStroke: "",
+                  textStroke: "",
+                });
+              }
+            }
+          }
         },
       });
 
-      // Animate chars (dummy tween for timeline length)
-      tl.to({}, { duration: totalDuration });
+      // Animate up to "through" char-by-char
+      if (charsBeforeDesign > 0) {
+        tl.to(
+          {},
+          { duration: charsBeforeDesign * perCharDuration }
+        );
+      }
+      // Reveal "design" char-by-char
+      if (designCharsCount > 0) {
+        tl.to({}, { duration: designCharsCount * perCharDuration });
+      }
+      // Animate the rest char-by-char
+      if (charsAfterDesign > 0) {
+        tl.to(
+          {},
+          { duration: charsAfterDesign * perCharDuration }
+        );
+      }
 
       // Animate SVG: from scale 0 to scale 1, only scale, no transformOrigin, no rotation, no width change
       if (svgRef.current) {
@@ -150,7 +261,7 @@ export function AnimatedAbout() {
         },
         onLeaveBack: () => {
           chars.forEach((el) => {
-            gsap.set(el, { color: baseColor, background: "none" });
+            gsap.set(el, { color: baseColor, background: "none", WebkitTextStroke: "", textStroke: "" });
           });
           tl.progress(0);
           setLastWhiteIndex(-1);
@@ -161,8 +272,16 @@ export function AnimatedAbout() {
         },
         onLeave: () => {
           chars.forEach((el) => {
-            gsap.set(el, { color: highlightColor, background: "none" });
+            gsap.set(el, { color: highlightColor, background: "none", WebkitTextStroke: "", textStroke: "" });
           });
+          // Also apply the special style to "design" chars when fully revealed
+          for (let i = designStartCharIdx; i <= designEndCharIdx; i++) {
+            gsap.set(chars[i], {
+              color: "#131518",
+              WebkitTextStroke: "1px #D1D1D1",
+              textStroke: "1px #D1D1D1",
+            });
+          }
           tl.progress(1);
           setLastWhiteIndex(chars.length - 1);
           if (svgRef.current) {
@@ -178,7 +297,7 @@ export function AnimatedAbout() {
         triggers.forEach((t) => t.kill());
         tl.kill();
         chars.forEach((el) => {
-          gsap.set(el, { color: baseColor, background: "none" });
+          gsap.set(el, { color: baseColor, background: "none", WebkitTextStroke: "", textStroke: "" });
         });
         setLastWhiteIndex(-1);
         if (svgRef.current) {
@@ -227,6 +346,7 @@ export function AnimatedAbout() {
               globalCharIdx++;
 
               // SLOW DOWN: Increase color transition duration from 0.2s to 0.4s
+              // For "design" chars, we want to keep the same size, but allow the color/stroke to be animated
               let style: React.CSSProperties = { transition: "color 0.4s" };
 
               // Only the last white (highlighted) char shows the indicator
@@ -244,6 +364,15 @@ export function AnimatedAbout() {
                 top: "50%",
                 transition: "left 0.05s linear",
               };
+
+              // Optionally, for "design" chars, add a transition for text-stroke
+              if (
+                thisCharIdx >= designStartCharIdx &&
+                thisCharIdx <= designEndCharIdx
+              ) {
+                style.transition =
+                  "color 0.4s, -webkit-text-stroke 0.4s, text-stroke 0.4s";
+              }
 
               return (
                 <span
