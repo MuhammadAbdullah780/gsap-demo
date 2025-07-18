@@ -13,10 +13,9 @@ export function AnimatedAbout() {
   const sectionRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<HTMLSpanElement>(null); // Ref for the SVG wrapper
   const [lastWhiteIndex, setLastWhiteIndex] = useState(-1);
-
-  // Add state for tech scribble
-  const [techScribbleScale, setTechScribbleScale] = useState(0);
   const [techDrawProgress, setTechDrawProgress] = useState(0);
+  // Keep the svgScale state for the "and" SVG
+  const [svgScale, setSvgScale] = useState(0);
 
   const highlightColor = "#fff";
   const baseColor = "#1A1C1F";
@@ -67,9 +66,6 @@ export function AnimatedAbout() {
   // The SVG animation should end when all chars are revealed
   const svgAnimEndCharIdx = arr.reduce((acc, w) => acc + w.length, 0) - 1;
 
-  // Track SVG scale for width hiding
-  const [svgScale, setSvgScale] = useState(0);
-
   // --- For "design" word: calculate its global char indices ---
   let designStartCharIdx = 0;
   for (let i = 0; i < designIdx; i++) {
@@ -105,7 +101,7 @@ export function AnimatedAbout() {
         });
       });
 
-      // Set initial SVG state: scale 0 (hidden)
+      // Set initial SVG state
       if (svgRef.current) {
         gsap.set(svgRef.current, { scale: 0 });
         setSvgScale(0);
@@ -216,31 +212,18 @@ export function AnimatedAbout() {
               1,
               (lastWhite - (techStartCharIdx - 1)) / (arr[techIdx].length + 1)
             );
-            
-            // Scale up as soon as we start revealing tech
-            setTechScribbleScale(techProgress);
-            
-            // Start drawing when scale reaches certain threshold
-            if (techProgress > 0.3) {
-              // Map the remaining progress to the drawing animation
-              const drawProgress = Math.max(0, (techProgress - 0.3) / 0.7);
-              setTechDrawProgress(drawProgress);
-            } else {
-              setTechDrawProgress(0);
-            }
+            setTechDrawProgress(techProgress);
           } else {
-            setTechScribbleScale(0);
             setTechDrawProgress(0);
           }
 
-          setLastWhiteIndex(lastWhite);
-
-          // Update svgScale state for width hiding
+          // Update "and" SVG scale
           if (svgRef.current) {
-            // Get current scale from gsap
             const scale = gsap.getProperty(svgRef.current, "scale") as number;
             setSvgScale(scale ?? 0);
           }
+
+          setLastWhiteIndex(lastWhite);
 
           // --- When "design" is fully revealed, apply special styles to its chars ---
           if (lastWhite >= designEndCharIdx) {
@@ -301,7 +284,7 @@ export function AnimatedAbout() {
                   svgRef.current,
                   "scale"
                 ) as number;
-                setSvgScale(scale ?? 0);
+                // setSvgScale(scale ?? 0); // This line was removed as per the edit hint
               }
             },
           },
@@ -331,12 +314,11 @@ export function AnimatedAbout() {
           });
           tl.progress(0);
           setLastWhiteIndex(-1);
-          setTechScribbleScale(0);
           setTechDrawProgress(0);
           setIsTechRevealing(false);
           if (svgRef.current) {
             gsap.set(svgRef.current, { scale: 0 });
-            setSvgScale(0);
+            // setSvgScale(0); // This line was removed as per the edit hint
           }
         },
         onLeave: () => {
@@ -360,7 +342,7 @@ export function AnimatedAbout() {
           setLastWhiteIndex(chars.length - 1);
           if (svgRef.current) {
             gsap.set(svgRef.current, { scale: 1 });
-            setSvgScale(1);
+            // setSvgScale(1); // This line was removed as per the edit hint
           }
         },
       });
@@ -379,12 +361,11 @@ export function AnimatedAbout() {
           });
         });
         setLastWhiteIndex(-1);
-        setTechScribbleScale(0);
         setTechDrawProgress(0);
         setIsTechRevealing(false);
         if (svgRef.current) {
           gsap.set(svgRef.current, { scale: 0 });
-          setSvgScale(0);
+          // setSvgScale(0); // This line was removed as per the edit hint
         }
       };
     },
@@ -425,10 +406,7 @@ export function AnimatedAbout() {
           >
             {/* Add tech scribble for the tech word */}
             {idx === techIdx && (
-              <TechScribble 
-                scale={techScribbleScale} 
-                progress={techDrawProgress}
-              />
+              <TechScribble progress={techDrawProgress} />
             )}
             {word.split("").map((char, charIdx) => {
               const thisCharIdx = globalCharIdx;
@@ -483,6 +461,7 @@ export function AnimatedAbout() {
             {/* FIX: Remove extra parenthesis that caused a syntax error */}
             <span
               className={`${
+                // setSvgScale(0) // This line was removed as per the edit hint
                 svgScale > 0 ? "w-fit" : idx === andIdx ? "w-5" : "w-0"
               } flex items-center`}
             >
