@@ -79,7 +79,12 @@ export function AnimatedAbout() {
       if (!section) return;
 
       chars.forEach((el) => {
-        gsap.set(el, { color: baseColor, background: "none", WebkitTextStroke: "", textStroke: "" });
+        gsap.set(el, {
+          color: baseColor,
+          background: "none",
+          WebkitTextStroke: "",
+          textStroke: "",
+        });
       });
 
       // Set initial SVG state: scale 0 (hidden)
@@ -88,14 +93,15 @@ export function AnimatedAbout() {
         setSvgScale(0);
       }
 
-      // Timeline: 
+      // Timeline:
       // 1. Reveal up to "through" char-by-char
       // 2. Reveal "design" char-by-char as the cursor crosses it
       // 3. Continue revealing "and" and "development" char-by-char
 
       const charsBeforeDesign = designRevealStartCharIdx;
       const designCharsCount = arr[designIdx].length;
-      const charsAfterDesign = chars.length - (designRevealStartCharIdx + designCharsCount);
+      const charsAfterDesign =
+        chars.length - (designRevealStartCharIdx + designCharsCount);
 
       const perCharDuration = 0.35;
       const totalDuration =
@@ -114,7 +120,8 @@ export function AnimatedAbout() {
         andStartCharIdx <= designRevealStartCharIdx
           ? andStartCharIdx * perCharDuration
           : charsBeforeDesign * perCharDuration +
-            (andStartCharIdx - (designRevealStartCharIdx + designCharsCount)) * perCharDuration;
+            (andStartCharIdx - (designRevealStartCharIdx + designCharsCount)) *
+              perCharDuration;
       const svgAnimEnd = totalDuration;
       const svgAnimDuration = svgAnimEnd - svgAnimStart;
 
@@ -138,18 +145,26 @@ export function AnimatedAbout() {
             whiteCharCount = Math.floor(currentTime / perCharDuration);
           } else if (
             currentTime >= charsBeforeDesign * perCharDuration &&
-            currentTime < (charsBeforeDesign + designCharsCount) * perCharDuration
+            currentTime <
+              (charsBeforeDesign + designCharsCount) * perCharDuration
           ) {
             // Revealing "design" one-by-one
-            const designTime = currentTime - charsBeforeDesign * perCharDuration;
-            const designCharsRevealed = Math.floor(designTime / perCharDuration);
+            const designTime =
+              currentTime - charsBeforeDesign * perCharDuration;
+            const designCharsRevealed = Math.floor(
+              designTime / perCharDuration
+            );
             whiteCharCount = designRevealStartCharIdx + designCharsRevealed;
           } else {
             // After "design", continue revealing rest
             const afterDesignTime =
-              currentTime - (charsBeforeDesign + designCharsCount) * perCharDuration;
-            const afterDesignChars = Math.floor(afterDesignTime / perCharDuration);
-            whiteCharCount = designRevealStartCharIdx + designCharsCount + afterDesignChars;
+              currentTime -
+              (charsBeforeDesign + designCharsCount) * perCharDuration;
+            const afterDesignChars = Math.floor(
+              afterDesignTime / perCharDuration
+            );
+            whiteCharCount =
+              designRevealStartCharIdx + designCharsCount + afterDesignChars;
           }
 
           // Clamp to total chars
@@ -159,10 +174,20 @@ export function AnimatedAbout() {
           chars.forEach((el, i) => {
             // For "design" chars, only reveal as the cursor crosses them
             if (i < whiteCharCount) {
-              gsap.set(el, { color: highlightColor, background: "none", WebkitTextStroke: "", textStroke: "" });
+              gsap.set(el, {
+                color: highlightColor,
+                background: "none",
+                WebkitTextStroke: "",
+                textStroke: "",
+              });
               lastWhite = i;
             } else {
-              gsap.set(el, { color: baseColor, background: "none", WebkitTextStroke: "", textStroke: "" });
+              gsap.set(el, {
+                color: baseColor,
+                background: "none",
+                WebkitTextStroke: "",
+                textStroke: "",
+              });
             }
           });
 
@@ -208,10 +233,7 @@ export function AnimatedAbout() {
 
       // Animate up to "through" char-by-char
       if (charsBeforeDesign > 0) {
-        tl.to(
-          {},
-          { duration: charsBeforeDesign * perCharDuration }
-        );
+        tl.to({}, { duration: charsBeforeDesign * perCharDuration });
       }
       // Reveal "design" char-by-char
       if (designCharsCount > 0) {
@@ -219,10 +241,7 @@ export function AnimatedAbout() {
       }
       // Animate the rest char-by-char
       if (charsAfterDesign > 0) {
-        tl.to(
-          {},
-          { duration: charsAfterDesign * perCharDuration }
-        );
+        tl.to({}, { duration: charsAfterDesign * perCharDuration });
       }
 
       // Animate SVG: from scale 0 to scale 1, only scale, no transformOrigin, no rotation, no width change
@@ -261,7 +280,12 @@ export function AnimatedAbout() {
         },
         onLeaveBack: () => {
           chars.forEach((el) => {
-            gsap.set(el, { color: baseColor, background: "none", WebkitTextStroke: "", textStroke: "" });
+            gsap.set(el, {
+              color: baseColor,
+              background: "none",
+              WebkitTextStroke: "",
+              textStroke: "",
+            });
           });
           tl.progress(0);
           setLastWhiteIndex(-1);
@@ -272,7 +296,12 @@ export function AnimatedAbout() {
         },
         onLeave: () => {
           chars.forEach((el) => {
-            gsap.set(el, { color: highlightColor, background: "none", WebkitTextStroke: "", textStroke: "" });
+            gsap.set(el, {
+              color: highlightColor,
+              background: "none",
+              WebkitTextStroke: "",
+              textStroke: "",
+            });
           });
           // Also apply the special style to "design" chars when fully revealed
           for (let i = designStartCharIdx; i <= designEndCharIdx; i++) {
@@ -297,7 +326,12 @@ export function AnimatedAbout() {
         triggers.forEach((t) => t.kill());
         tl.kill();
         chars.forEach((el) => {
-          gsap.set(el, { color: baseColor, background: "none", WebkitTextStroke: "", textStroke: "" });
+          gsap.set(el, {
+            color: baseColor,
+            background: "none",
+            WebkitTextStroke: "",
+            textStroke: "",
+          });
         });
         setLastWhiteIndex(-1);
         if (svgRef.current) {
@@ -377,7 +411,7 @@ export function AnimatedAbout() {
               return (
                 <span
                   key={`headline1-${idx}-char-${charIdx}`}
-                  className="char inline-block text-[#1A1C1F] text-5xl relative"
+                  className="char inline-block text-[#1A1C1F] font-normal leading-[125%] text-[50px] relative"
                   style={style}
                 >
                   {char}
@@ -391,6 +425,7 @@ export function AnimatedAbout() {
             })}
             {/* Render SVG between "and" and "development" */}
 
+            {/* FIX: Remove extra parenthesis that caused a syntax error */}
             <span
               className={`${
                 svgScale > 0 ? "w-fit" : idx === andIdx ? "w-5" : "w-0"
@@ -405,12 +440,12 @@ export function AnimatedAbout() {
                     // vertical alignment and shadow to match the screenshot
                     position: "relative",
                     top: "0.08em",
+                    width: 55,
+                    minWidth: 55,
+                    maxWidth: 55,
                     filter:
                       "drop-shadow(0 4px 12px #0a0a0a88) drop-shadow(0 1.5px 0 #0a0a0a44)",
-                    width: 50,
                     transform: `scale(${svgScale || 0})`,
-                    minWidth: 50,
-                    maxWidth: 50,
                     overflow: "hidden",
                     display: "inline-flex",
                     willChange: "transform,width",

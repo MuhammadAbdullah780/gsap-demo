@@ -8,7 +8,7 @@ const CodeSvg = (props: Props) => {
       height={76}
       id="section-one-liner--development-icon"
       viewBox="0 0 76 76"
-      width={76}
+      width={90}
       xmlns="http://www.w3.org/2000/svg"
       style={{ width: "auto" }}
     >
