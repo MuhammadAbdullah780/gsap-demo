@@ -5,6 +5,7 @@ import gsap from "gsap";
 import ScrollTrigger from "gsap/ScrollTrigger";
 import { useRef, useState } from "react";
 import CodeSvg from "./code-svg"; // Import the SVG component
+import TechScribble from "./tech-scribble"; // Import the new component
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
 
@@ -12,6 +13,10 @@ export function AnimatedAbout() {
   const sectionRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<HTMLSpanElement>(null); // Ref for the SVG wrapper
   const [lastWhiteIndex, setLastWhiteIndex] = useState(-1);
+
+  // Add state for tech scribble
+  const [techScribbleScale, setTechScribbleScale] = useState(0);
+  const [techDrawProgress, setTechDrawProgress] = useState(0);
 
   const highlightColor = "#fff";
   const baseColor = "#1A1C1F";
@@ -37,6 +42,19 @@ export function AnimatedAbout() {
   const andIdx = arr.findIndex((w) => w === "and");
   const developmentIdx = arr.findIndex((w) => w === "development");
   const designIdx = arr.findIndex((w) => w === "design");
+
+  // Find the index of "tech" word
+  const techIdx = arr.findIndex((w) => w === "tech");
+  
+  // Calculate tech word's global char indices
+  let techStartCharIdx = 0;
+  for (let i = 0; i < techIdx; i++) {
+    techStartCharIdx += arr[i].length;
+  }
+  const techEndCharIdx = techStartCharIdx + arr[techIdx].length - 1;
+
+  // Track if tech word is being revealed
+  const [isTechRevealing, setIsTechRevealing] = useState(false);
 
   // --- SVG Animation Start: when the first char of "and" is revealed ---
   // Calculate the global char index of the first char of "and"
@@ -191,6 +209,30 @@ export function AnimatedAbout() {
             }
           });
 
+          // Update tech scribble animation based on scroll progress
+          if (lastWhite >= techStartCharIdx - 1) {
+            // Calculate how much of the tech word is revealed
+            const techProgress = Math.min(
+              1,
+              (lastWhite - (techStartCharIdx - 1)) / (arr[techIdx].length + 1)
+            );
+            
+            // Scale up as soon as we start revealing tech
+            setTechScribbleScale(techProgress);
+            
+            // Start drawing when scale reaches certain threshold
+            if (techProgress > 0.3) {
+              // Map the remaining progress to the drawing animation
+              const drawProgress = Math.max(0, (techProgress - 0.3) / 0.7);
+              setTechDrawProgress(drawProgress);
+            } else {
+              setTechDrawProgress(0);
+            }
+          } else {
+            setTechScribbleScale(0);
+            setTechDrawProgress(0);
+          }
+
           setLastWhiteIndex(lastWhite);
 
           // Update svgScale state for width hiding
@@ -289,6 +331,9 @@ export function AnimatedAbout() {
           });
           tl.progress(0);
           setLastWhiteIndex(-1);
+          setTechScribbleScale(0);
+          setTechDrawProgress(0);
+          setIsTechRevealing(false);
           if (svgRef.current) {
             gsap.set(svgRef.current, { scale: 0 });
             setSvgScale(0);
@@ -334,6 +379,9 @@ export function AnimatedAbout() {
           });
         });
         setLastWhiteIndex(-1);
+        setTechScribbleScale(0);
+        setTechDrawProgress(0);
+        setIsTechRevealing(false);
         if (svgRef.current) {
           gsap.set(svgRef.current, { scale: 0 });
           setSvgScale(0);
@@ -364,7 +412,7 @@ export function AnimatedAbout() {
         {arr.map((word, idx) => (
           <span
             key={`headline-word-${idx}`}
-            className="flex items-center whitespace-nowrap"
+            className="flex items-center whitespace-nowrap relative"
             style={{
               // Remove mx-1 for all, and add custom margin for all except SVG
               marginRight:
@@ -375,6 +423,13 @@ export function AnimatedAbout() {
                   : undefined,
             }}
           >
+            {/* Add tech scribble for the tech word */}
+            {idx === techIdx && (
+              <TechScribble 
+                scale={techScribbleScale} 
+                progress={techDrawProgress}
+              />
+            )}
             {word.split("").map((char, charIdx) => {
               const thisCharIdx = globalCharIdx;
               globalCharIdx++;
