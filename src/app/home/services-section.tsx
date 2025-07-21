@@ -8,7 +8,7 @@ import { useRef } from "react";
 type Props = {};
 
 // Service list
-const services = [
+const designServices = [
   [
     "Information Architecture",
     "User research and testing",
@@ -22,6 +22,23 @@ const services = [
     "Decks and social media",
     "Motion design",
     "Website design",
+  ],
+];
+
+const developmentServices = [
+  [
+    "Website development",
+    "Web app development",
+    "Cross platform mobile apps",
+    "CMS implementation",
+    "Design Systems",
+  ],
+  [
+    "Technical research",
+    "Performance optimizations",
+    "API Integrations",
+    "Ongoing support",
+    "Collab with in-house team",
   ],
 ];
 
@@ -58,6 +75,19 @@ const interpolateToD2C9C4 = (progress: number) => {
   // #D2C9C4 = rgb(210, 201, 196)
   const startColor = [17, 17, 17];
   const endColor = [210, 201, 196];
+  let t = Math.max(0, Math.min(1, progress));
+  const r = Math.round(startColor[0] + (endColor[0] - startColor[0]) * t);
+  const g = Math.round(startColor[1] + (endColor[1] - startColor[1]) * t);
+  const b = Math.round(startColor[2] + (endColor[2] - startColor[2]) * t);
+  return `rgb(${r},${g},${b})`;
+};
+
+// Helper to interpolate from #BDAEA8 to #111
+const interpolateBDAEA8to111 = (progress: number) => {
+  // #BDAEA8 = rgb(189,174,168)
+  // #111 = rgb(17,17,17)
+  const startColor = [189, 174, 168];
+  const endColor = [17, 17, 17];
   let t = Math.max(0, Math.min(1, progress));
   const r = Math.round(startColor[0] + (endColor[0] - startColor[0]) * t);
   const g = Math.round(startColor[1] + (endColor[1] - startColor[1]) * t);
@@ -199,7 +229,7 @@ const ServicesSection = (props: Props) => {
         // --- FIX: Use a single ScrollTrigger and map progress to both timelines ---
         // We'll use a total scroll distance, e.g. 60% for stagger, 30% for layer
         const staggerScroll = 0.6; // 60% of scroll for stagger
-        const layerScroll = 0.3;   // 30% of scroll for layer
+        const layerScroll = 0.3; // 30% of scroll for layer
         const totalScroll = staggerScroll + layerScroll;
 
         ScrollTrigger.create({
@@ -227,11 +257,14 @@ const ServicesSection = (props: Props) => {
             if (designRef.current) {
               if (progress < staggerScroll) {
                 // Before layer animation, normal color interpolation
-                designRef.current.style.color = interpolateColor(progress / staggerScroll);
+                designRef.current.style.color = interpolateColor(
+                  progress / staggerScroll
+                );
               } else {
                 // During layer animation, interpolate from #111 to #D2C9C4
                 const layerProgress = (progress - staggerScroll) / layerScroll;
-                designRef.current.style.color = interpolateToD2C9C4(layerProgress);
+                designRef.current.style.color =
+                  interpolateToD2C9C4(layerProgress);
               }
             }
 
@@ -246,13 +279,22 @@ const ServicesSection = (props: Props) => {
                 const t = progress / staggerScroll;
                 const startColor = [231, 231, 231];
                 const endColor = [189, 174, 168];
-                const r = Math.round(startColor[0] + (endColor[0] - startColor[0]) * t);
-                const g = Math.round(startColor[1] + (endColor[1] - startColor[1]) * t);
-                const b = Math.round(startColor[2] + (endColor[2] - startColor[2]) * t);
+                const r = Math.round(
+                  startColor[0] + (endColor[0] - startColor[0]) * t
+                );
+                const g = Math.round(
+                  startColor[1] + (endColor[1] - startColor[1]) * t
+                );
+                const b = Math.round(
+                  startColor[2] + (endColor[2] - startColor[2]) * t
+                );
                 developmentRef.current.style.color = `rgb(${r},${g},${b})`;
               } else {
-                // After stagger animation, keep it at #BDAEA8
-                // developmentRef.current.style.color = "#BDAEA8";
+                // During layer animation, interpolate from #BDAEA8 to #111
+                // progress: [staggerScroll, staggerScroll+layerScroll] => t: [0,1]
+                const layerProgress = (progress - staggerScroll) / layerScroll;
+                developmentRef.current.style.color =
+                  interpolateBDAEA8to111(layerProgress);
               }
             }
           },
@@ -323,7 +365,7 @@ const ServicesSection = (props: Props) => {
         <div className="grid grid-cols-2">
           {/* FIRST COL */}
           <ul ref={firstColRef}>
-            {services[0].map((service) => (
+            {designServices[0].map((service) => (
               <li
                 key={service}
                 className="relative pl-[24px] mb-[32px] text-[24px] leading-[125%] font-normal"
@@ -336,7 +378,7 @@ const ServicesSection = (props: Props) => {
           </ul>
           {/* SECOND COL */}
           <ul ref={secondColRef}>
-            {services[1].map((service) => (
+            {designServices[1].map((service) => (
               <li
                 key={service}
                 className="text-[#E7E7E7] relative mb-[32px] pl-[24px] text-[24px] leading-[125%] font-normal"
