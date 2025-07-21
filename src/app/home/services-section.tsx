@@ -114,10 +114,10 @@ const ServicesSection = (props: Props) => {
 
       if (firstColRef.current && secondColRef.current && layerRef.current) {
         const itemsFirst = Array.from(
-          firstColRef.current.querySelectorAll("li")
+          firstColRef.current.querySelectorAll(".services-section__design-first-col")
         );
         const itemsSecond = Array.from(
-          secondColRef.current.querySelectorAll("li")
+          secondColRef.current.querySelectorAll(".services-section__design-second-col")
         );
 
         // Set initial state for all li children in both columns
@@ -368,7 +368,7 @@ const ServicesSection = (props: Props) => {
             {designServices[0].map((service) => (
               <li
                 key={service}
-                className="relative pl-[24px] mb-[32px] text-[24px] leading-[125%] font-normal"
+                className="relative services-section__design-first-col pl-[24px] mb-[32px] text-[24px] leading-[125%] font-normal"
                 style={{ willChange: "transform, opacity, color" }}
               >
                 {service}
@@ -381,7 +381,7 @@ const ServicesSection = (props: Props) => {
             {designServices[1].map((service) => (
               <li
                 key={service}
-                className="text-[#E7E7E7] relative mb-[32px] pl-[24px] text-[24px] leading-[125%] font-normal"
+                className="text-[#E7E7E7] services-section__design-second-col relative mb-[32px] pl-[24px] text-[24px] leading-[125%] font-normal"
                 style={{ willChange: "transform, opacity, color" }}
               >
                 {service}
@@ -395,7 +395,7 @@ const ServicesSection = (props: Props) => {
       {/* RELATIVE LAYER */}
       <div
         ref={layerRef}
-        className="absolute z-10 bg-[#FAF8F6] h-0 t-auto bottom-[24px] transform-none rounded-[36px] w-[calc(100%-48px)] left-6 pointer-events-none"
+        className="services-section__layer absolute z-10 bg-[#FAF8F6] h-0 t-auto bottom-[24px] transform-none rounded-[36px] w-[calc(100%-48px)] left-6 pointer-events-none"
         style={{
           transition: "height 0.3s, top 0.3s, bottom 0.3s, transform 0.3s",
         }}
