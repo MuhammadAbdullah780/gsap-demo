@@ -39,9 +39,36 @@ const interpolateColor = (progress: number) => {
   return `rgb(${r},${g},${b})`;
 };
 
+// Helper to interpolate to #A19591
+const interpolateToA19591 = (progress: number) => {
+  // #A19591 = rgb(161, 149, 145)
+  // #111 = rgb(17, 17, 17)
+  const startColor = [17, 17, 17]; // #111
+  const endColor = [161, 149, 145]; // #A19591
+  let t = Math.max(0, Math.min(1, progress));
+  const r = Math.round(startColor[0] + (endColor[0] - startColor[0]) * t);
+  const g = Math.round(startColor[1] + (endColor[1] - startColor[1]) * t);
+  const b = Math.round(startColor[2] + (endColor[2] - startColor[2]) * t);
+  return `rgb(${r},${g},${b})`;
+};
+
+// Helper to interpolate to #D2C9C4
+const interpolateToD2C9C4 = (progress: number) => {
+  // #111 = rgb(17, 17, 17)
+  // #D2C9C4 = rgb(210, 201, 196)
+  const startColor = [17, 17, 17];
+  const endColor = [210, 201, 196];
+  let t = Math.max(0, Math.min(1, progress));
+  const r = Math.round(startColor[0] + (endColor[0] - startColor[0]) * t);
+  const g = Math.round(startColor[1] + (endColor[1] - startColor[1]) * t);
+  const b = Math.round(startColor[2] + (endColor[2] - startColor[2]) * t);
+  return `rgb(${r},${g},${b})`;
+};
+
 const ServicesSection = (props: Props) => {
   const sectionRef = useRef<HTMLDivElement>(null);
   const designRef = useRef<HTMLParagraphElement>(null);
+  const developmentRef = useRef<HTMLParagraphElement>(null);
   const firstColRef = useRef<HTMLUListElement>(null);
   const secondColRef = useRef<HTMLUListElement>(null);
   const layerRef = useRef<HTMLDivElement>(null);
@@ -51,27 +78,11 @@ const ServicesSection = (props: Props) => {
 
   useGSAP(
     () => {
-      // Color animation for "Design"
-      let st = ScrollTrigger.create({
-        trigger: sectionRef.current,
-        start: "top top",
-        end: "bottom top",
-        pin: true,
-        pinSpacing: true,
-        scrub: 1.0,
-        onUpdate: (self) => {
-          // Reverse the progress: 1 - self.progress
-          const reversedProgress = 1 - self.progress;
-          if (designRef.current) {
-            designRef.current.style.color = interpolateColor(reversedProgress);
-          }
-        },
-      });
-
       // Staggered animation for both columns, with color change per item
       let tl: gsap.core.Timeline | null = null;
+      let layerTimeline: gsap.core.Timeline | null = null;
 
-      if (firstColRef.current && secondColRef.current) {
+      if (firstColRef.current && secondColRef.current && layerRef.current) {
         const itemsFirst = Array.from(
           firstColRef.current.querySelectorAll("li")
         );
@@ -90,6 +101,24 @@ const ServicesSection = (props: Props) => {
           opacity: 0,
           color: "#E7E7E7",
         });
+
+        // Set initial state for the layer: hidden at bottom, height 0, centered horizontally
+        // The layer should appear from +24px above the bottom (bottom: 24px)
+        gsap.set(layerRef.current, {
+          height: 0,
+          width: "calc(100% - 48px)",
+          left: "24px",
+          right: "24px",
+          top: "auto",
+          bottom: "24px", // <-- Start at 24px from bottom
+          y: 0,
+          opacity: 1,
+        });
+
+        // Set initial color for Development word
+        if (developmentRef.current) {
+          developmentRef.current.style.color = "#E7E7E7";
+        }
 
         const appearColor = "#111";
 
@@ -146,50 +175,107 @@ const ServicesSection = (props: Props) => {
           );
         });
 
-        // ScrollTrigger to scrub the timeline as you scroll
-        const totalDuration = tl.duration();
+        // After stagger animation, animate the layer coming up and expanding
+        // The layer animation should be controlled by a single ScrollTrigger
+        // We'll use a single ScrollTrigger for the whole section, and map progress to both timelines
+
+        // Layer animation timeline (starts after stagger timeline completes)
+        layerTimeline = gsap.timeline({ paused: true });
+
+        // Step 1: Layer comes up from bottom (height 0 at bottom:24px)
+        layerTimeline.to(
+          layerRef.current,
+          {
+            height: "calc(100% - 100px)",
+            top: "50%",
+            bottom: "auto",
+            y: "-50%",
+            duration: 1.1,
+            ease: "expo.out",
+          },
+          0
+        );
+
+        // --- FIX: Use a single ScrollTrigger and map progress to both timelines ---
+        // We'll use a total scroll distance, e.g. 60% for stagger, 30% for layer
+        const staggerScroll = 0.6; // 60% of scroll for stagger
+        const layerScroll = 0.3;   // 30% of scroll for layer
+        const totalScroll = staggerScroll + layerScroll;
 
         ScrollTrigger.create({
           trigger: sectionRef.current,
           start: "top top",
-          end: `+=${window.innerHeight * 0.6}`,
+          end: `+=${window.innerHeight * totalScroll}`,
           scrub: true,
+          pin: true,
+          pinSpacing: true,
           onUpdate: (self) => {
             const progress = self.progress;
-            tl!.progress(progress);
+            // Map progress 0..staggerScroll to tl, staggerScroll..1 to layerTimeline
+            if (progress < staggerScroll) {
+              const tlProgress = progress / staggerScroll;
+              tl!.progress(tlProgress);
+              layerTimeline!.progress(0);
+            } else {
+              tl!.progress(1);
+              const layerProgress = (progress - staggerScroll) / layerScroll;
+              layerTimeline!.progress(Math.min(Math.max(layerProgress, 0), 1));
+            }
+
+            // Handle "Design" color:
+            // When the layer animation starts (i.e., progress >= staggerScroll), gradually interpolate from #111 to #D2C9C4 with scroll
+            if (designRef.current) {
+              if (progress < staggerScroll) {
+                // Before layer animation, normal color interpolation
+                designRef.current.style.color = interpolateColor(progress / staggerScroll);
+              } else {
+                // During layer animation, interpolate from #111 to #D2C9C4
+                const layerProgress = (progress - staggerScroll) / layerScroll;
+                designRef.current.style.color = interpolateToD2C9C4(layerProgress);
+              }
+            }
+
+            // Handle "Development" color animation:
+            // The animation starts when the first col staggered animation starts,
+            // and the color of development word should be changed to #BDAEA8
+            // The duration of this part of animation is the duration of both first and second column staggered animation (i.e., until staggerScroll is complete)
+            if (developmentRef.current) {
+              if (progress < staggerScroll) {
+                // Animate from #E7E7E7 to #BDAEA8 as progress goes from 0 to staggerScroll
+                // #E7E7E7 = rgb(231,231,231), #BDAEA8 = rgb(189,174,168)
+                const t = progress / staggerScroll;
+                const startColor = [231, 231, 231];
+                const endColor = [189, 174, 168];
+                const r = Math.round(startColor[0] + (endColor[0] - startColor[0]) * t);
+                const g = Math.round(startColor[1] + (endColor[1] - startColor[1]) * t);
+                const b = Math.round(startColor[2] + (endColor[2] - startColor[2]) * t);
+                developmentRef.current.style.color = `rgb(${r},${g},${b})`;
+              } else {
+                // After stagger animation, keep it at #BDAEA8
+                // developmentRef.current.style.color = "#BDAEA8";
+              }
+            }
           },
         });
-      }
-
-      // Layer animation: from height 0 at bottom to full height centered
-      if (layerRef.current && sectionRef.current) {
-        // Set initial state: height 0, bottom 0, left-6, width calc(100%-48px), rounded, bg, etc.
+      } else if (layerRef.current && sectionRef.current) {
+        // Fallback: set initial state for the layer if columns are not ready
         gsap.set(layerRef.current, {
           height: 0,
+          width: "calc(100% - 48px)",
+          left: "24px",
+          right: "24px",
           top: "auto",
           bottom: "24px",
           y: 0,
+          opacity: 1,
         });
-
-        // Animate to: height calc(100%-100px), top 50%, bottom auto, translateY(-50%)
-        gsap.to(layerRef.current, {
-          height: "calc(100% - 100px)",
-          top: "50%",
-          bottom: "auto",
-          y: "-50%",
-          duration: 0.8,
-          ease: "power2.out",
-          scrollTrigger: {
-            trigger: sectionRef.current,
-            start: "top 80%",
-            end: "top 60%",
-            scrub: true,
-          },
-        });
+        // Fallback: set initial state for Development word
+        if (developmentRef.current) {
+          developmentRef.current.style.color = "#E7E7E7";
+        }
       }
 
       return () => {
-        st && st.kill();
         ScrollTrigger.getAll().forEach((t) => t.kill());
       };
     },
@@ -202,7 +288,7 @@ const ServicesSection = (props: Props) => {
       className="w-full relative p-[52px] flex h-screen justify-center flex-col"
     >
       {/* TOP CARD */}
-      <div className="flex gap-[8px] items-center border-b border-[#e1e3e4] z-10 mb-[80px] pb-[24px]">
+      <div className="flex gap-[8px] items-center border-b border-[#e1e3e4] z-20 mb-[80px] pb-[24px]">
         <span className="text-[24px] leading-[100%] font-semibold">
           Services
         </span>
@@ -218,7 +304,7 @@ const ServicesSection = (props: Props) => {
 
       {/* MAIN SECTION */}
       <div className="grid grid-cols-2">
-        <div className="flex flex-col gap-[32px]">
+        <div className="flex z-30 flex-col gap-[32px]">
           <p
             ref={designRef}
             className="text-[98.3px] leading-[100%] font-normal"
@@ -226,7 +312,11 @@ const ServicesSection = (props: Props) => {
           >
             Design
           </p>
-          <p className="text-[#E7E7E7] text-[98.3px] leading-[100%] font-normal">
+          <p
+            ref={developmentRef}
+            className="text-[#E7E7E7] text-[98.3px] leading-[100%] font-normal"
+            style={{ color: "#E7E7E7" }}
+          >
             Development
           </p>
         </div>
@@ -261,17 +351,13 @@ const ServicesSection = (props: Props) => {
       </div>
 
       {/* RELATIVE LAYER */}
-      {/* <div
+      <div
         ref={layerRef}
-        className="absolute bg-[#FAF8F6] rounded-[36px] w-[calc(100%-48px)] left-6 h-[calc(100%-100px)] top-1/2 -translate-y-1/2 pointer-events-none"
+        className="absolute z-10 bg-[#FAF8F6] h-0 t-auto bottom-[24px] transform-none rounded-[36px] w-[calc(100%-48px)] left-6 pointer-events-none"
         style={{
-          // These styles are for SSR/hydration fallback, GSAP will override
-          height: "calc(100% - 100px)",
-          top: "50%",
-          bottom: "auto",
-          transform: "translateY(-50%)",
+          transition: "height 0.3s, top 0.3s, bottom 0.3s, transform 0.3s",
         }}
-      ></div> */}
+      />
     </section>
   );
 };
