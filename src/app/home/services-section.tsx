@@ -102,6 +102,8 @@ const ServicesSection = (props: Props) => {
   const firstColRef = useRef<HTMLUListElement>(null);
   const secondColRef = useRef<HTMLUListElement>(null);
   const layerRef = useRef<HTMLDivElement>(null);
+  const devFirstColRef = useRef<HTMLUListElement>(null);
+  const devSecondColRef = useRef<HTMLUListElement>(null);
 
   // Initial color for SSR/hydration
   const initialColor = interpolateColor(0);
@@ -111,13 +113,36 @@ const ServicesSection = (props: Props) => {
       // Staggered animation for both columns, with color change per item
       let tl: gsap.core.Timeline | null = null;
       let layerTimeline: gsap.core.Timeline | null = null;
+      let devTl: gsap.core.Timeline | null = null;
 
-      if (firstColRef.current && secondColRef.current && layerRef.current) {
+      if (
+        firstColRef.current &&
+        secondColRef.current &&
+        layerRef.current &&
+        devFirstColRef.current &&
+        devSecondColRef.current
+      ) {
         const itemsFirst = Array.from(
-          firstColRef.current.querySelectorAll(".services-section__design-first-col")
+          firstColRef.current.querySelectorAll(
+            ".services-section__design-first-col"
+          )
         );
         const itemsSecond = Array.from(
-          secondColRef.current.querySelectorAll(".services-section__design-second-col")
+          secondColRef.current.querySelectorAll(
+            ".services-section__design-second-col"
+          )
+        );
+
+        // For dev columns
+        const devItemsFirst = Array.from(
+          devFirstColRef.current.querySelectorAll(
+            ".services-section__dev-first-col"
+          )
+        );
+        const devItemsSecond = Array.from(
+          devSecondColRef.current.querySelectorAll(
+            ".services-section__dev-second-col"
+          )
         );
 
         // Set initial state for all li children in both columns
@@ -127,6 +152,18 @@ const ServicesSection = (props: Props) => {
           color: "#E7E7E7",
         });
         gsap.set(itemsSecond, {
+          y: 40,
+          opacity: 0,
+          color: "#E7E7E7",
+        });
+
+        // Set initial state for dev columns
+        gsap.set(devItemsFirst, {
+          y: 40,
+          opacity: 0,
+          color: "#E7E7E7",
+        });
+        gsap.set(devItemsSecond, {
           y: 40,
           opacity: 0,
           color: "#E7E7E7",
@@ -151,6 +188,7 @@ const ServicesSection = (props: Props) => {
         }
 
         const appearColor = "#111";
+        const devAppearColor = "#111";
 
         // Create a single timeline for both columns, staggered one after the other
         tl = gsap.timeline({ paused: true });
@@ -226,11 +264,65 @@ const ServicesSection = (props: Props) => {
           0
         );
 
-        // --- FIX: Use a single ScrollTrigger and map progress to both timelines ---
-        // We'll use a total scroll distance, e.g. 60% for stagger, 30% for layer
-        const staggerScroll = 0.6; // 60% of scroll for stagger
-        const layerScroll = 0.3; // 30% of scroll for layer
-        const totalScroll = staggerScroll + layerScroll;
+        // Animate dev columns in a staggered way after the layer is up
+        devTl = gsap.timeline({ paused: true });
+
+        // Animate dev first column
+        devItemsFirst.forEach((item, i) => {
+          devTl!.to(
+            item,
+            {
+              y: 0,
+              opacity: 1,
+              duration: 0.4,
+              ease: "power2.out",
+            },
+            i * 0.25
+          );
+          devTl!.to(
+            item,
+            {
+              color: devAppearColor,
+              duration: 0.2,
+              ease: "power1.inOut",
+            },
+            i * 0.25 + 0.4
+          );
+        });
+
+        // Animate dev second column, staggered after the first column finishes
+        const devFirstColDuration =
+          devItemsFirst.length > 0
+            ? (devItemsFirst.length - 1) * 0.25 + 0.4 + 0.2
+            : 0;
+        devItemsSecond.forEach((item, i) => {
+          devTl!.to(
+            item,
+            {
+              y: 0,
+              opacity: 1,
+              duration: 0.4,
+              ease: "power2.out",
+            },
+            devFirstColDuration + i * 0.25
+          );
+          devTl!.to(
+            item,
+            {
+              color: devAppearColor,
+              duration: 0.2,
+              ease: "power1.inOut",
+            },
+            devFirstColDuration + i * 0.25 + 0.4
+          );
+        });
+
+        // --- FIX: Use a single ScrollTrigger and map progress to all timelines ---
+        // We'll use a total scroll distance, e.g. 60% for stagger, 30% for layer, 30% for dev
+        const staggerScroll = 0.5; // 50% of scroll for design stagger
+        const layerScroll = 0.25; // 25% of scroll for layer
+        const devScroll = 0.25; // 25% of scroll for dev stagger
+        const totalScroll = staggerScroll + layerScroll + devScroll;
 
         ScrollTrigger.create({
           trigger: sectionRef.current,
@@ -241,15 +333,23 @@ const ServicesSection = (props: Props) => {
           pinSpacing: true,
           onUpdate: (self) => {
             const progress = self.progress;
-            // Map progress 0..staggerScroll to tl, staggerScroll..1 to layerTimeline
+            // Map progress 0..staggerScroll to tl, staggerScroll..staggerScroll+layerScroll to layerTimeline, then devTl
             if (progress < staggerScroll) {
               const tlProgress = progress / staggerScroll;
               tl!.progress(tlProgress);
               layerTimeline!.progress(0);
-            } else {
+              devTl!.progress(0);
+            } else if (progress < staggerScroll + layerScroll) {
               tl!.progress(1);
               const layerProgress = (progress - staggerScroll) / layerScroll;
               layerTimeline!.progress(Math.min(Math.max(layerProgress, 0), 1));
+              devTl!.progress(0);
+            } else {
+              tl!.progress(1);
+              layerTimeline!.progress(1);
+              const devProgress =
+                (progress - staggerScroll - layerScroll) / devScroll;
+              devTl!.progress(Math.min(Math.max(devProgress, 0), 1));
             }
 
             // Handle "Design" color:
@@ -260,11 +360,14 @@ const ServicesSection = (props: Props) => {
                 designRef.current.style.color = interpolateColor(
                   progress / staggerScroll
                 );
-              } else {
+              } else if (progress < staggerScroll + layerScroll) {
                 // During layer animation, interpolate from #111 to #D2C9C4
                 const layerProgress = (progress - staggerScroll) / layerScroll;
                 designRef.current.style.color =
                   interpolateToD2C9C4(layerProgress);
+              } else {
+                // After layer, keep at #D2C9C4
+                designRef.current.style.color = interpolateToD2C9C4(1);
               }
             }
 
@@ -289,12 +392,15 @@ const ServicesSection = (props: Props) => {
                   startColor[2] + (endColor[2] - startColor[2]) * t
                 );
                 developmentRef.current.style.color = `rgb(${r},${g},${b})`;
-              } else {
+              } else if (progress < staggerScroll + layerScroll) {
                 // During layer animation, interpolate from #BDAEA8 to #111
                 // progress: [staggerScroll, staggerScroll+layerScroll] => t: [0,1]
                 const layerProgress = (progress - staggerScroll) / layerScroll;
                 developmentRef.current.style.color =
                   interpolateBDAEA8to111(layerProgress);
+              } else {
+                // After dev animation, keep at #111
+                developmentRef.current.style.color = "#111";
               }
             }
           },
@@ -395,11 +501,42 @@ const ServicesSection = (props: Props) => {
       {/* RELATIVE LAYER */}
       <div
         ref={layerRef}
-        className="services-section__layer absolute z-10 bg-[#FAF8F6] h-0 t-auto bottom-[24px] transform-none rounded-[36px] w-[calc(100%-48px)] left-6 pointer-events-none"
+        className="absolute z-10 bg-[#FAF8F6] h-0 t-auto bottom-[24px] transform-none rounded-[36px] w-[calc(100%-48px)] left-6 pointer-events-none"
         style={{
           transition: "height 0.3s, top 0.3s, bottom 0.3s, transform 0.3s",
         }}
-      />
+      >
+        <div className="w-full h-full relative">
+          <div className="grid grid-cols-2 w-[650px] h-[310px] absolute top-[350px] right-0">
+            {/* FIRST COL */}
+            <ul ref={devFirstColRef}>
+              {developmentServices[0].map((service) => (
+                <li
+                  key={service}
+                  className="relative services-section__dev-first-col pl-[24px] mb-[32px] text-[24px] leading-[125%] font-normal"
+                  style={{ willChange: "transform, opacity, color" }}
+                >
+                  {service}
+                  <span className="sparkle absolute left-0 top-[25%]" />
+                </li>
+              ))}
+            </ul>
+            {/* SECOND COL */}
+            <ul ref={devSecondColRef}>
+              {developmentServices[1].map((service) => (
+                <li
+                  key={service}
+                  className="text-[#E7E7E7] services-section__dev-second-col relative mb-[32px] pl-[24px] text-[24px] leading-[125%] font-normal"
+                  style={{ willChange: "transform, opacity, color" }}
+                >
+                  {service}
+                  <span className="sparkle absolute left-0 top-[25%]" />
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </div>
     </section>
   );
 };
