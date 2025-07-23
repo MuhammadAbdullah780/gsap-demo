@@ -2,6 +2,7 @@
 
 import { useGSAP } from "@gsap/react";
 import { gsap } from "gsap";
+import { DrawSVGPlugin } from "gsap/DrawSVGPlugin";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useRef } from "react";
 
@@ -42,7 +43,7 @@ const developmentServices = [
   ],
 ];
 
-gsap.registerPlugin(ScrollTrigger);
+gsap.registerPlugin(ScrollTrigger, DrawSVGPlugin);
 
 // Helper to interpolate color
 const interpolateColor = (progress: number) => {
@@ -104,6 +105,7 @@ const ServicesSection = (props: Props) => {
   const layerRef = useRef<HTMLDivElement>(null);
   const devFirstColRef = useRef<HTMLUListElement>(null);
   const devSecondColRef = useRef<HTMLUListElement>(null);
+  const scribbleRef = useRef<SVGPathElement>(null);
 
   // Initial color for SSR/hydration
   const initialColor = interpolateColor(0);
@@ -453,6 +455,66 @@ const ServicesSection = (props: Props) => {
             }
           },
         });
+
+        // Initialize DrawSVG animation (FORWARD)
+        if (scribbleRef.current) {
+          // Set initial state - not drawn
+          gsap.set(scribbleRef.current, {
+            drawSVG: "100% 100%",
+          });
+
+          // Create timeline for scribble animation (forward: draw)
+          const scribbleTl = gsap.timeline({ paused: true });
+
+          // Stage 1: Draw from 0% to 30% (i.e., 0% 0% -> 0% 30%)
+          scribbleTl.to(scribbleRef.current, {
+            drawSVG: "100% 75%",
+            duration: 1,
+            ease: "power2.inOut",
+          });
+
+          // Stage 2: Draw from 30% to 60% (i.e., 0% 30% -> 0% 60%)
+          scribbleTl.to(scribbleRef.current, {
+            drawSVG: "90% 50%",
+            duration: 1,
+            ease: "power2.inOut",
+          });
+
+          // Stage 3: Draw from 60% to 100% (i.e., 0% 60% -> 0% 100%)
+          scribbleTl.to(scribbleRef.current, {
+            drawSVG: "50% 0%",
+            duration: 1,
+            ease: "power2.inOut",
+          });
+
+          // Create ScrollTrigger for the scribble animation (forward mapping)
+          ScrollTrigger.create({
+            trigger: sectionRef.current,
+            start: "top top",
+            end: `+=${window.innerHeight * totalScroll}`, // Use the same total scroll as other animations
+            scrub: true,
+            onUpdate: (self) => {
+              const progress = self.progress;
+
+              // Map the scroll progress to our animation timeline (forward)
+              if (progress < designScroll) {
+                // During design services stagger (0-25%)
+                const t = progress / designScroll;
+                scribbleTl.progress(t * 0.3); // First 30% of animation (from 0 to 0.3)
+              } else if (progress < designScroll + layer1Scroll) {
+                // During layer stage 1 (25-50%)
+                const t = (progress - designScroll) / layer1Scroll;
+                scribbleTl.progress(0.3 + t * 0.3); // 0.3 to 0.6
+              } else {
+                // During remaining scroll (50-100%)
+                const t =
+                  (progress - (designScroll + layer1Scroll)) /
+                  (devScroll + layer2Scroll);
+                scribbleTl.progress(0.6 + t * 0.4); // 0.6 to 1
+              }
+            },
+          });
+        }
       } else if (layerRef.current && sectionRef.current) {
         // Fallback: set initial state for the layer if columns are not ready
         gsap.set(layerRef.current, {
@@ -469,6 +531,12 @@ const ServicesSection = (props: Props) => {
         // Fallback: set initial state for Development word
         if (developmentRef.current) {
           developmentRef.current.style.color = "#E7E7E7";
+        }
+        // Fallback: scribble not drawn
+        if (scribbleRef.current) {
+          gsap.set(scribbleRef.current, {
+            drawSVG: "100% 100%",
+          });
         }
       }
 
@@ -519,8 +587,7 @@ const ServicesSection = (props: Props) => {
             Development
           </p>
           <svg
-            className="SectionDeliverables_scribble__izr_n absolute bottom-10 -left-20"
-            data-gsap="section-deliverables-scribble"
+            className="services-section__scribble absolute bottom-10 -left-20"
             fill="none"
             preserveAspectRatio="none"
             viewBox="0 0 725 175"
@@ -529,12 +596,12 @@ const ServicesSection = (props: Props) => {
             xmlns="http://www.w3.org/2000/svg"
           >
             <path
+              ref={scribbleRef}
               d="M720 165C400 140 260 155 150 168C70 177 -5 160 5 105C15 50 50 25 90 15C130 5 340 0 420 10"
               stroke="#D7CDC8"
               strokeLinecap="round"
               strokeWidth="5"
-              className="stroke-dasharray-[319.464px,909.445px] stroke-dashoffset-[-909.145]"
-            ></path>
+            />
           </svg>
         </div>
         <div className="grid grid-cols-2 relative">
