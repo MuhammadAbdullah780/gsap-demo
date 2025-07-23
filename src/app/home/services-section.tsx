@@ -271,7 +271,7 @@ const ServicesSection = (props: Props) => {
         layerTl.to(
           layerRef.current,
           {
-            width: "100%", // was "100vw"
+            width: "100vw", // was "100vw"
             height: "100vh",
             left: 0,
             right: 0,
@@ -452,14 +452,6 @@ const ServicesSection = (props: Props) => {
               }
             }
           },
-          // Add onPin and onUnpin to handle overflow-x
-          onToggle: (self) => {
-            if (self.isActive) {
-              document.body.style.overflowX = "hidden";
-            } else {
-              document.body.style.overflowX = "";
-            }
-          },
         });
       } else if (layerRef.current && sectionRef.current) {
         // Fallback: set initial state for the layer if columns are not ready
@@ -492,7 +484,7 @@ const ServicesSection = (props: Props) => {
   return (
     <section
       ref={sectionRef}
-      className="w-full relative p-[52px] flex h-screen justify-center flex-col"
+      className="w-full overflow-hidden relative p-[52px] flex h-screen justify-center flex-col"
     >
       {/* TOP CARD */}
       <div className="flex gap-[8px] items-center border-b border-[#e1e3e4] z-20 mb-[80px] pb-[24px]">
