@@ -347,7 +347,8 @@ const ServicesSection = (props: Props) => {
         const layer1Scroll = 0.25;
         const devScroll = 0.25;
         const layer2Scroll = 0.25;
-        const totalScroll = designScroll + layer1Scroll + devScroll + layer2Scroll;
+        const totalScroll =
+          designScroll + layer1Scroll + devScroll + layer2Scroll;
 
         ScrollTrigger.create({
           trigger: sectionRef.current,
@@ -443,8 +444,7 @@ const ServicesSection = (props: Props) => {
                 // During layer stage 1, interpolate from #BDAEA8 to #111
                 // progress: [designScroll, designScroll+layer1Scroll] => t: [0,1]
                 const t = (progress - designScroll) / layer1Scroll;
-                developmentRef.current.style.color =
-                  interpolateBDAEA8to111(t);
+                developmentRef.current.style.color = interpolateBDAEA8to111(t);
               } else {
                 // After dev animation, keep at #111
                 developmentRef.current.style.color = "#111";
@@ -516,7 +516,7 @@ const ServicesSection = (props: Props) => {
             Development
           </p>
         </div>
-        <div className="grid grid-cols-2">
+        <div className="grid grid-cols-2 relative">
           {/* FIRST COL */}
           <ul ref={firstColRef}>
             {designServices[0].map((service) => (
@@ -543,23 +543,12 @@ const ServicesSection = (props: Props) => {
               </li>
             ))}
           </ul>
-        </div>
-      </div>
 
-      {/* RELATIVE LAYER */}
-      <div
-        ref={layerRef}
-        className="absolute z-10 bg-[#FAF8F6] h-0 t-auto bottom-[24px] transform-none rounded-[36px] w-[calc(100%-48px)] left-6 pointer-events-none"
-        style={{
-          transition: "height 0.3s, top 0.3s, bottom 0.3s, transform 0.3s, border-radius 0.3s, width 0.3s, left 0.3s, right 0.3s",
-        }}
-      >
-        <div className="w-full h-full relative">
           {/* 
             NOTE: The positioning of this div does NOT change on stage 2 animation.
             It remains absolutely positioned at top-[350px] right-0, even when the layer expands to full screen.
           */}
-          <div className="grid grid-cols-2 w-[650px] h-[310px] absolute top-[350px] right-0">
+          <div className="grid grid-cols-2 w-full h-full absolute top-0 right-0 z-20">
             {/* FIRST COL */}
             <ul ref={devFirstColRef}>
               {developmentServices[0].map((service) => (
@@ -588,6 +577,18 @@ const ServicesSection = (props: Props) => {
             </ul>
           </div>
         </div>
+      </div>
+
+      {/* RELATIVE LAYER */}
+      <div
+        ref={layerRef}
+        className="absolute z-10 bg-[#FAF8F6] h-0 t-auto bottom-[24px] transform-none rounded-[36px] w-[calc(100%-48px)] left-6 pointer-events-none"
+        style={{
+          transition:
+            "height 0.3s, top 0.3s, bottom 0.3s, transform 0.3s, border-radius 0.3s, width 0.3s, left 0.3s, right 0.3s",
+        }}
+      >
+        <div className="w-full h-full relative"></div>
       </div>
     </section>
   );
