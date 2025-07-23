@@ -503,7 +503,7 @@ const ServicesSection = (props: Props) => {
 
       {/* MAIN SECTION */}
       <div className="grid grid-cols-2">
-        <div className="flex z-30 flex-col gap-[32px]">
+        <div className="flex z-30 flex-col gap-[32px] relative">
           <p
             ref={designRef}
             className="text-[98.3px] leading-[100%] font-normal"
@@ -518,6 +518,24 @@ const ServicesSection = (props: Props) => {
           >
             Development
           </p>
+          <svg
+            className="SectionDeliverables_scribble__izr_n absolute bottom-10 -left-20"
+            data-gsap="section-deliverables-scribble"
+            fill="none"
+            preserveAspectRatio="none"
+            viewBox="0 0 725 175"
+            width="100%"
+            height="50%"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M720 165C400 140 260 155 150 168C70 177 -5 160 5 105C15 50 50 25 90 15C130 5 340 0 420 10"
+              stroke="#D7CDC8"
+              strokeLinecap="round"
+              strokeWidth="5"
+              className="stroke-dasharray-[319.464px,909.445px] stroke-dashoffset-[-909.145]"
+            ></path>
+          </svg>
         </div>
         <div className="grid grid-cols-2 relative">
           {/* FIRST COL */}
