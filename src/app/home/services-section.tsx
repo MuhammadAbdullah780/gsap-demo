@@ -251,7 +251,6 @@ const ServicesSection = (props: Props) => {
         layerTl.to(
           layerRef.current,
           {
-            width: "calc(100% - 48px)",
             height: "calc(100% - 100px)",
             left: "24px",
             right: "24px",
@@ -267,10 +266,12 @@ const ServicesSection = (props: Props) => {
 
         // Stage 2: expand to full screen, all positions 0, border 0, width/height 100vw/100vh
         // NOTE: The inner dev columns container (the one with absolute top-[350px] right-0) does NOT change its positioning in this stage.
+        // --- THIS IS THE CAUSE OF THE OVERFLOW-X ISSUE ---
+        // To fix, use width: "100%" instead of "100vw"
         layerTl.to(
           layerRef.current,
           {
-            width: "100vw",
+            width: "100%", // was "100vw"
             height: "100vh",
             left: 0,
             right: 0,
@@ -451,6 +452,14 @@ const ServicesSection = (props: Props) => {
               }
             }
           },
+          // Add onPin and onUnpin to handle overflow-x
+          onToggle: (self) => {
+            if (self.isActive) {
+              document.body.style.overflowX = "hidden";
+            } else {
+              document.body.style.overflowX = "";
+            }
+          },
         });
       } else if (layerRef.current && sectionRef.current) {
         // Fallback: set initial state for the layer if columns are not ready
@@ -473,6 +482,8 @@ const ServicesSection = (props: Props) => {
 
       return () => {
         ScrollTrigger.getAll().forEach((t) => t.kill());
+        // Clean up overflow-x
+        document.body.style.overflowX = "";
       };
     },
     { scope: sectionRef }
@@ -587,9 +598,7 @@ const ServicesSection = (props: Props) => {
           transition:
             "height 0.3s, top 0.3s, bottom 0.3s, transform 0.3s, border-radius 0.3s, width 0.3s, left 0.3s, right 0.3s",
         }}
-      >
-        <div className="w-full h-full relative"></div>
-      </div>
+      />
     </section>
   );
 };
