@@ -110,10 +110,10 @@ const ServicesSection = (props: Props) => {
 
   useGSAP(
     () => {
-      // Staggered animation for both columns, with color change per item
-      let tl: gsap.core.Timeline | null = null;
-      let layerTimeline: gsap.core.Timeline | null = null;
+      // Only one timeline for the layer
+      let designTl: gsap.core.Timeline | null = null;
       let devTl: gsap.core.Timeline | null = null;
+      let layerTl: gsap.core.Timeline | null = null;
 
       if (
         firstColRef.current &&
@@ -172,14 +172,15 @@ const ServicesSection = (props: Props) => {
         // Set initial state for the layer: hidden at bottom, height 0, centered horizontally
         // The layer should appear from +24px above the bottom (bottom: 24px)
         gsap.set(layerRef.current, {
-          height: 0,
           width: "calc(100% - 48px)",
+          height: 0,
           left: "24px",
           right: "24px",
           top: "auto",
-          bottom: "24px", // <-- Start at 24px from bottom
+          bottom: "24px",
           y: 0,
           opacity: 1,
+          borderRadius: "0px",
         });
 
         // Set initial color for Development word
@@ -190,12 +191,12 @@ const ServicesSection = (props: Props) => {
         const appearColor = "#111";
         const devAppearColor = "#111";
 
-        // Create a single timeline for both columns, staggered one after the other
-        tl = gsap.timeline({ paused: true });
+        // 0. Design columns staggered animation (before layer stage 1)
+        designTl = gsap.timeline({ paused: true });
 
         // Animate first column items
         itemsFirst.forEach((item, i) => {
-          tl!.to(
+          designTl!.to(
             item,
             {
               y: 0,
@@ -205,7 +206,7 @@ const ServicesSection = (props: Props) => {
             },
             i * 0.25
           );
-          tl!.to(
+          designTl!.to(
             item,
             {
               color: appearColor,
@@ -222,7 +223,7 @@ const ServicesSection = (props: Props) => {
             ? (itemsFirst.length - 1) * 0.25 + 0.4 + 0.2
             : 0;
         itemsSecond.forEach((item, i) => {
-          tl!.to(
+          designTl!.to(
             item,
             {
               y: 0,
@@ -232,7 +233,7 @@ const ServicesSection = (props: Props) => {
             },
             firstColDuration + i * 0.25
           );
-          tl!.to(
+          designTl!.to(
             item,
             {
               color: appearColor,
@@ -243,28 +244,47 @@ const ServicesSection = (props: Props) => {
           );
         });
 
-        // After stagger animation, animate the layer coming up and expanding
-        // The layer animation should be controlled by a single ScrollTrigger
-        // We'll use a single ScrollTrigger for the whole section, and map progress to both timelines
+        // 1. Layer timeline: all layer stages in one timeline
+        layerTl = gsap.timeline({ paused: true });
 
-        // Layer animation timeline (starts after stagger timeline completes)
-        layerTimeline = gsap.timeline({ paused: true });
-
-        // Step 1: Layer comes up from bottom (height 0 at bottom:24px)
-        layerTimeline.to(
+        // Stage 1: from initial to "card" size, centered
+        layerTl.to(
           layerRef.current,
           {
+            width: "calc(100% - 48px)",
             height: "calc(100% - 100px)",
+            left: "24px",
+            right: "24px",
             top: "50%",
             bottom: "auto",
             y: "-50%",
+            borderRadius: "32px",
             duration: 1.1,
             ease: "expo.out",
           },
           0
         );
 
-        // Animate dev columns in a staggered way after the layer is up
+        // Stage 2: expand to full screen, all positions 0, border 0, width/height 100vw/100vh
+        // NOTE: The inner dev columns container (the one with absolute top-[350px] right-0) does NOT change its positioning in this stage.
+        layerTl.to(
+          layerRef.current,
+          {
+            width: "100vw",
+            height: "100vh",
+            left: 0,
+            right: 0,
+            top: 0,
+            bottom: 0,
+            y: 0,
+            borderRadius: "0px",
+            duration: 1.1,
+            ease: "expo.inOut",
+          },
+          "+=1.1" // after stage 1
+        );
+
+        // 2. Dev columns staggered animation (after layer stage 1 is complete)
         devTl = gsap.timeline({ paused: true });
 
         // Animate dev first column
@@ -317,12 +337,17 @@ const ServicesSection = (props: Props) => {
           );
         });
 
-        // --- FIX: Use a single ScrollTrigger and map progress to all timelines ---
-        // We'll use a total scroll distance, e.g. 60% for stagger, 30% for layer, 30% for dev
-        const staggerScroll = 0.5; // 50% of scroll for design stagger
-        const layerScroll = 0.25; // 25% of scroll for layer
-        const devScroll = 0.25; // 25% of scroll for dev stagger
-        const totalScroll = staggerScroll + layerScroll + devScroll;
+        // --- ScrollTrigger: 4 stages ---
+        // 0. Design columns staggered (designTl)
+        // 1. Layer stage 1 (layerTl, progress 0->0.5)
+        // 2. Dev columns staggered (devTl)
+        // 3. Layer stage 2 (layerTl, progress 0.5->1)
+        // We'll use: 0.25, 0.25, 0.25, 0.25 (25% each) for scroll progress
+        const designScroll = 0.25;
+        const layer1Scroll = 0.25;
+        const devScroll = 0.25;
+        const layer2Scroll = 0.25;
+        const totalScroll = designScroll + layer1Scroll + devScroll + layer2Scroll;
 
         ScrollTrigger.create({
           trigger: sectionRef.current,
@@ -333,38 +358,60 @@ const ServicesSection = (props: Props) => {
           pinSpacing: true,
           onUpdate: (self) => {
             const progress = self.progress;
-            // Map progress 0..staggerScroll to tl, staggerScroll..staggerScroll+layerScroll to layerTimeline, then devTl
-            if (progress < staggerScroll) {
-              const tlProgress = progress / staggerScroll;
-              tl!.progress(tlProgress);
-              layerTimeline!.progress(0);
+            // 0..designScroll: designTl
+            // designScroll..designScroll+layer1Scroll: layerTl (0->0.5)
+            // ...devScroll: devTl
+            // ...layer2Scroll: layerTl (0.5->1)
+
+            // Layer timeline progress mapping:
+            // 0..layer1Scroll: 0..0.5
+            // layer2Scroll: 0.5..1
+
+            // 1. Design columns staggered
+            if (progress < designScroll) {
+              const t = progress / designScroll;
+              designTl!.progress(t);
+              layerTl!.progress(0);
               devTl!.progress(0);
-            } else if (progress < staggerScroll + layerScroll) {
-              tl!.progress(1);
-              const layerProgress = (progress - staggerScroll) / layerScroll;
-              layerTimeline!.progress(Math.min(Math.max(layerProgress, 0), 1));
+            }
+            // 2. Layer stage 1 (card, centered)
+            else if (progress < designScroll + layer1Scroll) {
+              designTl!.progress(1);
+              const t = (progress - designScroll) / layer1Scroll;
+              // Layer timeline: 0..0.5
+              layerTl!.progress(t * 0.5);
               devTl!.progress(0);
-            } else {
-              tl!.progress(1);
-              layerTimeline!.progress(1);
-              const devProgress =
-                (progress - staggerScroll - layerScroll) / devScroll;
-              devTl!.progress(Math.min(Math.max(devProgress, 0), 1));
+            }
+            // 3. Dev columns staggered, layer stays at card state
+            else if (progress < designScroll + layer1Scroll + devScroll) {
+              designTl!.progress(1);
+              layerTl!.progress(0.5); // hold at card state
+              const t = (progress - designScroll - layer1Scroll) / devScroll;
+              devTl!.progress(t);
+            }
+            // 4. Layer stage 2 (expand to full screen)
+            else {
+              designTl!.progress(1);
+              devTl!.progress(1);
+              // Layer timeline: 0.5..1
+              const t =
+                (progress - designScroll - layer1Scroll - devScroll) /
+                layer2Scroll;
+              layerTl!.progress(0.5 + Math.min(Math.max(t, 0), 1) * 0.5);
             }
 
             // Handle "Design" color:
-            // When the layer animation starts (i.e., progress >= staggerScroll), gradually interpolate from #111 to #D2C9C4 with scroll
+            // When the layer animation starts (i.e., progress >= designScroll), gradually interpolate from #111 to #D2C9C4 with scroll
             if (designRef.current) {
-              if (progress < staggerScroll) {
+              if (progress < designScroll) {
                 // Before layer animation, normal color interpolation
                 designRef.current.style.color = interpolateColor(
-                  progress / staggerScroll
+                  progress / designScroll
                 );
-              } else if (progress < staggerScroll + layerScroll) {
-                // During layer animation, interpolate from #111 to #D2C9C4
-                const layerProgress = (progress - staggerScroll) / layerScroll;
-                designRef.current.style.color =
-                  interpolateToD2C9C4(layerProgress);
+              } else if (progress < designScroll + layer1Scroll) {
+                // During layer stage 1, interpolate from #111 to #D2C9C4
+                const t = (progress - designScroll) / layer1Scroll;
+                designRef.current.style.color = interpolateToD2C9C4(t);
               } else {
                 // After layer, keep at #D2C9C4
                 designRef.current.style.color = interpolateToD2C9C4(1);
@@ -374,12 +421,12 @@ const ServicesSection = (props: Props) => {
             // Handle "Development" color animation:
             // The animation starts when the first col staggered animation starts,
             // and the color of development word should be changed to #BDAEA8
-            // The duration of this part of animation is the duration of both first and second column staggered animation (i.e., until staggerScroll is complete)
+            // The duration of this part of animation is the duration of both first and second column staggered animation (i.e., until designScroll is complete)
             if (developmentRef.current) {
-              if (progress < staggerScroll) {
-                // Animate from #E7E7E7 to #BDAEA8 as progress goes from 0 to staggerScroll
+              if (progress < designScroll) {
+                // Animate from #E7E7E7 to #BDAEA8 as progress goes from 0 to designScroll
                 // #E7E7E7 = rgb(231,231,231), #BDAEA8 = rgb(189,174,168)
-                const t = progress / staggerScroll;
+                const t = progress / designScroll;
                 const startColor = [231, 231, 231];
                 const endColor = [189, 174, 168];
                 const r = Math.round(
@@ -392,12 +439,12 @@ const ServicesSection = (props: Props) => {
                   startColor[2] + (endColor[2] - startColor[2]) * t
                 );
                 developmentRef.current.style.color = `rgb(${r},${g},${b})`;
-              } else if (progress < staggerScroll + layerScroll) {
-                // During layer animation, interpolate from #BDAEA8 to #111
-                // progress: [staggerScroll, staggerScroll+layerScroll] => t: [0,1]
-                const layerProgress = (progress - staggerScroll) / layerScroll;
+              } else if (progress < designScroll + layer1Scroll) {
+                // During layer stage 1, interpolate from #BDAEA8 to #111
+                // progress: [designScroll, designScroll+layer1Scroll] => t: [0,1]
+                const t = (progress - designScroll) / layer1Scroll;
                 developmentRef.current.style.color =
-                  interpolateBDAEA8to111(layerProgress);
+                  interpolateBDAEA8to111(t);
               } else {
                 // After dev animation, keep at #111
                 developmentRef.current.style.color = "#111";
@@ -408,14 +455,15 @@ const ServicesSection = (props: Props) => {
       } else if (layerRef.current && sectionRef.current) {
         // Fallback: set initial state for the layer if columns are not ready
         gsap.set(layerRef.current, {
-          height: 0,
           width: "calc(100% - 48px)",
+          height: 0,
           left: "24px",
           right: "24px",
           top: "auto",
           bottom: "24px",
           y: 0,
           opacity: 1,
+          borderRadius: "0px",
         });
         // Fallback: set initial state for Development word
         if (developmentRef.current) {
@@ -503,10 +551,14 @@ const ServicesSection = (props: Props) => {
         ref={layerRef}
         className="absolute z-10 bg-[#FAF8F6] h-0 t-auto bottom-[24px] transform-none rounded-[36px] w-[calc(100%-48px)] left-6 pointer-events-none"
         style={{
-          transition: "height 0.3s, top 0.3s, bottom 0.3s, transform 0.3s",
+          transition: "height 0.3s, top 0.3s, bottom 0.3s, transform 0.3s, border-radius 0.3s, width 0.3s, left 0.3s, right 0.3s",
         }}
       >
         <div className="w-full h-full relative">
+          {/* 
+            NOTE: The positioning of this div does NOT change on stage 2 animation.
+            It remains absolutely positioned at top-[350px] right-0, even when the layer expands to full screen.
+          */}
           <div className="grid grid-cols-2 w-[650px] h-[310px] absolute top-[350px] right-0">
             {/* FIRST COL */}
             <ul ref={devFirstColRef}>
