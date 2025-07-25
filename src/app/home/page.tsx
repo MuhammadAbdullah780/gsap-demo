@@ -1,6 +1,6 @@
 "use client";
 
-import { ProjectSection } from "./projects-section";
+import ProjectsGrid from "./projects-grid";
 import { ServicesSection } from "./services-section";
 // No import needed for "fusion nue" if it's a system font or already available globally.
 
@@ -19,7 +19,7 @@ const Page = () => {
         </h2>
       </section>
       {/* <AnimatedAbout /> */}
-      <ProjectSection />
+      <ProjectsGrid />
       <ServicesSection />
       <section className="h-screen flex items-center justify-center">
         <h2 className="text-4xl font-bold text-gray-800">Section 4: Contact</h2>
