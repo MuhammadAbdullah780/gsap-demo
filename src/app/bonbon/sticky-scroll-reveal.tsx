@@ -1,7 +1,7 @@
 "use client";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { useRef } from "react";
+import { useRef, useEffect, useState } from "react";
 
 type Props = {};
 
@@ -26,49 +26,39 @@ const StickyScrollReveal = (props: Props) => {
   const sectionRef = useRef<HTMLDivElement>(null);
   const slidesWrapperRef = useRef<HTMLDivElement>(null);
   const imagesWrapperRef = useRef<HTMLDivElement>(null);
+  const [activeIndex, setActiveIndex] = useState(0);
 
-  //   useGSAP(
-  //     () => {
-  //       if (
-  //         !sectionRef.current ||
-  //         !slidesWrapperRef.current ||
-  //         !imagesWrapperRef.current
-  //       )
-  //         return;
+  useEffect(() => {
+    if (!sectionRef.current || !slidesWrapperRef.current) return;
 
-  //       // Animate vertical translation of slides and images in sync with scroll
-  //       const slideHeight = window.innerHeight * 0.7; // or a fixed value, adjust as needed
-  //       const totalSlides = MOCK.length;
-  //       const totalScroll = slideHeight * (totalSlides - 1);
+    const slides = slidesWrapperRef.current.children;
+    const totalSlides = slides.length;
 
-  //       // Slides vertical translation
-  //       gsap.to(slidesWrapperRef.current, {
-  //         y: () => `-${totalScroll}px`,
-  //         ease: "none",
-  //         scrollTrigger: {
-  //           trigger: sectionRef.current,
-  //           start: "top top",
-  //           end: () => `+=${totalScroll}`,
-  //           scrub: true,
-  //           pin: true,
-  //         },
-  //       });
+    // Create the scroll trigger animation
+    gsap.to(slidesWrapperRef.current, {
+      y: () => -(slidesWrapperRef.current!.offsetHeight - window.innerHeight),
+      ease: "none",
+      scrollTrigger: {
+        trigger: sectionRef.current,
+        start: "top top",
+        end: () => `+=${window.innerHeight * (totalSlides - 1)}`,
+        scrub: 1,
+        pin: true,
+        anticipatePin: 1,
+        invalidateOnRefresh: true,
+        onUpdate: (self) => {
+          // Calculate active index based on scroll progress
+          const newIndex = Math.round(self.progress * (totalSlides - 1));
+          setActiveIndex(newIndex);
+        },
+      },
+    });
 
-  //       // Images vertical translation
-  //       gsap.to(imagesWrapperRef.current, {
-  //         y: () => `-${totalScroll}px`,
-  //         ease: "none",
-  //         scrollTrigger: {
-  //           trigger: sectionRef.current,
-  //           start: "top top",
-  //           end: () => `+=${totalScroll}`,
-  //           scrub: true,
-  //           pin: false,
-  //         },
-  //       });
-  //     },
-  //     { dependencies: [] }
-  //   );
+    // Cleanup
+    return () => {
+      ScrollTrigger.getAll().forEach(t => t.kill());
+    };
+  }, []);
 
   return (
     <section
@@ -76,20 +66,32 @@ const StickyScrollReveal = (props: Props) => {
       className="relative h-screen max-w-[1300px] w-full mx-auto block"
     >
       <div className="grid grid-cols-2 w-full h-full">
-        <div className="flex flex-col col-span-1 justify-center items-start h-full">
-          <p className="mb-5 text-[30px] text-center">{MOCK[0].id_count}</p>
-          <h1 className="mb-5 text-[35px] font-bold max-w-[300px]">
-            {MOCK[0].title}
-          </h1>
-          <p className="mb-0 text-[17px] max-w-[500px]">
-            {MOCK[0].text}
-          </p>
+        <div className="flex flex-col col-span-1 justify-center items-start h-screen relative overflow-hidden">
+          <div 
+            ref={slidesWrapperRef} 
+            className="absolute top-0 left-0 w-full"
+          >
+            {MOCK.map((item) => (
+              <div 
+                key={item.id_count} 
+                className="h-screen flex flex-col justify-center px-8"
+              >
+                <p className="mb-5 text-[30px]">{item.id_count}</p>
+                <h1 className="mb-5 text-[35px] font-bold max-w-[300px]">
+                  {item.title}
+                </h1>
+                <p className="mb-0 text-[17px] max-w-[500px]">
+                  {item.text}
+                </p>
+              </div>
+            ))}
+          </div>
         </div>
         {/* Right: Vertically translating images */}
         <div className="flex-1 flex items-center justify-center relative h-full">
           <img
-            src={MOCK[0].image}
-            alt={MOCK[0].title}
+            src={MOCK[activeIndex].image}
+            alt={MOCK[activeIndex].title}
             className="rounded-lg object-cover"
             style={{
               width: "420px",

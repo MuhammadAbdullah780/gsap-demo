@@ -4,6 +4,7 @@ import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import ScrollTrigger from "gsap/ScrollTrigger";
 import { useRef } from "react";
+import StickyScrollReveal from "../bonbon/sticky-scroll-reveal";
 import { AnimatedAbout } from "./animated-about";
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
@@ -92,6 +93,7 @@ const Page = () => {
         </h2>
       </section>
       <AnimatedAbout />
+      <StickyScrollReveal />
       <section className="h-screen flex items-center justify-center">
         <h2 className="text-4xl font-bold text-gray-800">
           Section 3: Our Team
