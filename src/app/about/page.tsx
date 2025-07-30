@@ -4,6 +4,7 @@ import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import ScrollTrigger from "gsap/ScrollTrigger";
 import { useRef } from "react";
+import ProjectSlider from "../bonbon/projects-slider";
 import StickyScrollReveal from "../bonbon/sticky-scroll-reveal";
 import { AnimatedAbout } from "./animated-about";
 
@@ -94,6 +95,7 @@ const Page = () => {
       </section>
       <AnimatedAbout />
       <StickyScrollReveal />
+      <ProjectSlider />
       <section className="h-screen flex items-center justify-center">
         <h2 className="text-4xl font-bold text-gray-800">
           Section 3: Our Team
