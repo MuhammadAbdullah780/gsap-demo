@@ -139,11 +139,12 @@ const ProjectsGrid = (props: Props) => {
             className="absolute top-0 left-0 w-full h-full"
             style={{ visibility: 'visible' }}
           >
-            <div 
+            {/* Image Container - Full screen on mobile, half on desktop */}
+            <div
               ref={el => { if (el) projectRefs.current[index].image = el; }}
-              className="h-full w-full relative p-12"
+              className="h-full w-full relative p-3 md:p-12"
             >
-              <div className="h-full w-full overflow-hidden rounded-[clamp(32px,1.8518518519vw,1.8518518519vw)]">
+              <div className="h-full w-full overflow-hidden rounded-xl md:rounded-[clamp(32px,1.8518518519vw,1.8518518519vw)]">
                 <div className="h-full min-h-full w-full overflow-hidden relative">
                   <img
                     className="block w-full h-full min-w-full min-h-full max-w-none object-cover object-center"
@@ -154,20 +155,26 @@ const ProjectsGrid = (props: Props) => {
               </div>
             </div>
 
+            {/* Text Content - Bottom overlay on mobile, side panel on desktop */}
             <div
               ref={el => { if (el) projectRefs.current[index].text = el; }}
-              className="absolute top-0 right-0 min-w-[520px] w-[50%] h-full flex flex-col justify-end p-12"
+              className="absolute bottom-0 md:top-0 right-0 w-full md:w-[50%] h-auto md:h-full flex flex-col justify-end p-3 md:p-12"
             >
-              <div className="pb-16 pr-8 text-left w-full">
-                <h2 className="text-[#131518] mb-4 text-[72px] leading-[100%]">{project.title}</h2>
-                <p className="mb-16 text-[#393f46] text-[24px] leading-[150%]">
+              {/* Mobile gradient backdrop for readability */}
+              <div className="md:hidden absolute inset-0 bg-gradient-to-t from-white via-white/95 to-transparent pointer-events-none" />
+              
+              <div className="relative z-10 pb-4 md:pb-16 pr-0 md:pr-8 text-left w-full">
+                <h2 className="text-[#131518] mb-2 md:mb-4 text-2xl sm:text-3xl md:text-5xl lg:text-[72px] leading-[110%] md:leading-[100%]">
+                  {project.title}
+                </h2>
+                <p className="mb-4 md:mb-16 text-[#393f46] text-sm sm:text-base md:text-xl lg:text-[24px] leading-[150%] line-clamp-3 md:line-clamp-none">
                   {project.description}
                 </p>
-                <ul className="flex flex-wrap gap-3 self-stretch items-start content-start">
+                <ul className="flex flex-wrap gap-2 md:gap-3 self-stretch items-start content-start">
                   {project.tags.map((tag, tagIndex) => (
                     <span
                       key={tagIndex}
-                      className="rounded-full mb-16 w-fit border border-[#e7ded9] px-6 py-3"
+                      className="rounded-full mb-2 md:mb-16 w-fit border border-[#e7ded9] px-3 md:px-6 py-1.5 md:py-3 text-xs md:text-base bg-white/80 md:bg-transparent"
                     >
                       {tag}
                     </span>

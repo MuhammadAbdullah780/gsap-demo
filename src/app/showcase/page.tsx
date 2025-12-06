@@ -162,47 +162,47 @@ const ShowcasePage = () => {
         <ProjectsGrid />
       </div>
       {/* Footer Section */}
-      <footer className="bg-[#0a0a0a] py-24 px-8">
+      <footer className="bg-[#0a0a0a] py-16 md:py-24 px-4 md:px-8">
         <div className="max-w-6xl mx-auto text-center">
-          <div className="mb-12">
-            <span className="inline-block px-4 py-2 bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/30 rounded-full text-purple-300 text-sm mb-8">
+          <div className="mb-8 md:mb-12">
+            <span className="inline-block px-3 md:px-4 py-2 bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/30 rounded-full text-purple-300 text-xs md:text-sm mb-6 md:mb-8">
               Ready to bring your vision to life?
             </span>
-            <h2 className="text-4xl md:text-6xl font-bold text-white mb-6">
+            <h2 className="text-3xl md:text-5xl lg:text-6xl font-bold text-white mb-4 md:mb-6">
               Let&apos;s Create Something
               <span className="block bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
                 Extraordinary
               </span>
             </h2>
-            <p className="text-lg text-white/60 max-w-xl mx-auto">
+            <p className="text-base md:text-lg text-white/60 max-w-xl mx-auto px-4">
               These animations represent just a glimpse of what&apos;s possible.
               Let&apos;s discuss how we can elevate your project with stunning,
               performant animations.
             </p>
           </div>
 
-          <div className="flex flex-wrap justify-center gap-6 mb-16">
-            <div className="px-8 py-4 bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl">
-              <span className="text-white/40 text-sm block mb-1">
+          <div className="flex flex-wrap justify-center gap-3 md:gap-6 mb-12 md:mb-16">
+            <div className="px-4 md:px-8 py-3 md:py-4 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl md:rounded-2xl">
+              <span className="text-white/40 text-xs md:text-sm block mb-1">
                 Framework
               </span>
-              <span className="text-white font-semibold">GSAP + Next.js</span>
+              <span className="text-white font-semibold text-sm md:text-base">GSAP + Next.js</span>
             </div>
-            <div className="px-8 py-4 bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl">
-              <span className="text-white/40 text-sm block mb-1">
+            <div className="px-4 md:px-8 py-3 md:py-4 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl md:rounded-2xl">
+              <span className="text-white/40 text-xs md:text-sm block mb-1">
                 Animations
               </span>
-              <span className="text-white font-semibold">4 Showcases</span>
+              <span className="text-white font-semibold text-sm md:text-base">3 Showcases</span>
             </div>
-            <div className="px-8 py-4 bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl">
-              <span className="text-white/40 text-sm block mb-1">
+            <div className="px-4 md:px-8 py-3 md:py-4 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl md:rounded-2xl">
+              <span className="text-white/40 text-xs md:text-sm block mb-1">
                 Performance
               </span>
-              <span className="text-white font-semibold">60fps Smooth</span>
+              <span className="text-white font-semibold text-sm md:text-base">60fps Smooth</span>
             </div>
           </div>
 
-          <p className="text-white/30 text-sm">
+          <p className="text-white/30 text-xs md:text-sm">
             © {new Date().getFullYear()} GSAP Animation Showcase. Built with ❤️
             and code.
           </p>
@@ -271,11 +271,11 @@ const SectionDivider = ({
   return (
     <div
       ref={dividerRef}
-      className={`${bgColor} py-32 px-8 flex items-center justify-center`}
+      className={`${bgColor} py-16 md:py-32 px-4 md:px-8 flex items-center justify-center`}
     >
       <div ref={contentRef} className="max-w-4xl mx-auto text-center">
         <span
-          className={`inline-block text-8xl md:text-9xl font-bold mb-6 ${
+          className={`inline-block text-6xl md:text-8xl lg:text-9xl font-bold mb-4 md:mb-6 ${
             dark
               ? "text-white/5"
               : "text-black/5"
@@ -285,14 +285,14 @@ const SectionDivider = ({
           {number}
         </span>
         <h2
-          className={`text-3xl md:text-5xl font-bold mb-6 ${
+          className={`text-2xl md:text-4xl lg:text-5xl font-bold mb-4 md:mb-6 ${
             dark ? "text-white" : "text-gray-900"
           }`}
         >
           {title}
         </h2>
         <p
-          className={`text-lg md:text-xl max-w-2xl mx-auto ${
+          className={`text-base md:text-lg lg:text-xl max-w-2xl mx-auto px-4 ${
             dark ? "text-white/60" : "text-gray-600"
           }`}
         >
