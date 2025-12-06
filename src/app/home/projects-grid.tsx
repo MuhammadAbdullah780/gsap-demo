@@ -130,7 +130,7 @@ const ProjectsGrid = (props: Props) => {
   }, { scope: containerRef });
 
   return (
-    <div className="relative w-full overflow-x-hidden" style={{ height: `${200 * projects.length}vh` }}>
+    <div className="relative w-full overflow-x-hidden" style={{ height: `${150 * projects.length}vh` }}>
       <div ref={containerRef} className="h-screen relative w-full bg-white">
         {projects.map((project, index) => (
           <div
