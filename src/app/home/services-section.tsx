@@ -552,42 +552,43 @@ const ServicesSection = (props: Props) => {
   return (
     <section
       ref={sectionRef}
-      className="w-full overflow-hidden relative p-[52px] flex h-screen justify-center flex-col"
+      className="w-full overflow-hidden relative p-4 md:p-[52px] flex min-h-screen lg:h-screen justify-center flex-col"
     >
       {/* TOP CARD */}
-      <div className="flex gap-[8px] items-center border-b border-[#e1e3e4] z-20 mb-[80px] pb-[24px]">
-        <span className="text-[24px] leading-[100%] font-semibold">
+      <div className="flex flex-wrap gap-2 md:gap-[8px] items-center border-b border-[#e1e3e4] z-20 mb-6 md:mb-[80px] pb-4 md:pb-[24px]">
+        <span className="text-base md:text-[24px] leading-[100%] font-semibold">
           Services
         </span>
         <img
           alt=""
-          className="h-[7px] w-[30px] mt-[2px]"
+          className="h-[5px] md:h-[7px] w-[20px] md:w-[30px] mt-[2px] hidden md:block"
           src="https://yummygum.com/images/home/services-separator.svg"
         />
-        <p className="text-[#71757f] text-[24px]">
+        <p className="text-[#71757f] text-sm md:text-[24px] w-full md:w-auto">
           Ranging from big ideas to fine details
         </p>
       </div>
 
-      {/* MAIN SECTION */}
-      <div className="grid grid-cols-2">
-        <div className="flex z-30 flex-col gap-[32px] relative">
+      {/* MAIN SECTION - Desktop: 2 col grid, Mobile: stacked */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-0">
+        {/* Left side - Design & Development headings */}
+        <div className="flex z-30 flex-col gap-2 md:gap-[32px] relative mb-6 lg:mb-0">
           <p
             ref={designRef}
-            className="text-[98.3px] leading-[100%] font-normal"
+            className="text-3xl sm:text-4xl md:text-6xl lg:text-[98.3px] leading-[100%] font-normal"
             style={{ color: initialColor }}
           >
             Design
           </p>
           <p
             ref={developmentRef}
-            className="text-[#E7E7E7] text-[98.3px] leading-[100%] font-normal"
+            className="text-[#E7E7E7] text-3xl sm:text-4xl md:text-6xl lg:text-[98.3px] leading-[100%] font-normal"
             style={{ color: "#E7E7E7" }}
           >
             Development
           </p>
           <svg
-            className="services-section__scribble absolute bottom-10 -left-20"
+            className="services-section__scribble absolute bottom-10 -left-4 md:-left-20 hidden lg:block"
             fill="none"
             preserveAspectRatio="none"
             viewBox="0 0 725 175"
@@ -604,13 +605,15 @@ const ServicesSection = (props: Props) => {
             />
           </svg>
         </div>
-        <div className="grid grid-cols-2 relative">
-          {/* FIRST COL */}
+        
+        {/* Right side - Service lists */}
+        <div className="grid grid-cols-2 relative gap-2 md:gap-0">
+          {/* FIRST COL - Design Services */}
           <ul ref={firstColRef}>
             {designServices[0].map((service) => (
               <li
                 key={service}
-                className="relative services-section__design-first-col pl-[24px] mb-[32px] text-[24px] leading-[125%] font-normal"
+                className="relative services-section__design-first-col pl-4 md:pl-[24px] mb-3 md:mb-[32px] text-xs md:text-lg lg:text-[24px] leading-[140%] md:leading-[125%] font-normal"
                 style={{ willChange: "transform, opacity, color" }}
               >
                 {service}
@@ -618,12 +621,12 @@ const ServicesSection = (props: Props) => {
               </li>
             ))}
           </ul>
-          {/* SECOND COL */}
+          {/* SECOND COL - Design Services */}
           <ul ref={secondColRef}>
             {designServices[1].map((service) => (
               <li
                 key={service}
-                className="text-[#E7E7E7] services-section__design-second-col relative mb-[32px] pl-[24px] text-[24px] leading-[125%] font-normal"
+                className="text-[#E7E7E7] services-section__design-second-col relative mb-3 md:mb-[32px] pl-4 md:pl-[24px] text-xs md:text-lg lg:text-[24px] leading-[140%] md:leading-[125%] font-normal"
                 style={{ willChange: "transform, opacity, color" }}
               >
                 {service}
@@ -633,10 +636,10 @@ const ServicesSection = (props: Props) => {
           </ul>
 
           {/* 
-            NOTE: The positioning of this div does NOT change on stage 2 animation.
-            It remains absolutely positioned at top-[350px] right-0, even when the layer expands to full screen.
+            Development Services Overlay - HIDDEN on mobile to prevent overlap
+            Only shows on lg+ screens where the animation works properly
           */}
-          <div className="grid grid-cols-2 w-full h-full absolute top-0 right-0 z-20">
+          <div className="hidden lg:grid grid-cols-2 w-full h-full absolute top-0 right-0 z-20">
             {/* FIRST COL */}
             <ul ref={devFirstColRef}>
               {developmentServices[0].map((service) => (
@@ -667,10 +670,10 @@ const ServicesSection = (props: Props) => {
         </div>
       </div>
 
-      {/* RELATIVE LAYER */}
+      {/* RELATIVE LAYER - Hidden on mobile */}
       <div
         ref={layerRef}
-        className="absolute z-10 bg-[#FAF8F6] h-0 t-auto bottom-[24px] transform-none rounded-[36px] w-[calc(100%-48px)] left-6 pointer-events-none"
+        className="hidden lg:block absolute z-10 bg-[#FAF8F6] h-0 t-auto bottom-[24px] transform-none rounded-[36px] w-[calc(100%-48px)] left-6 pointer-events-none"
         style={{
           transition:
             "height 0.3s, top 0.3s, bottom 0.3s, transform 0.3s, border-radius 0.3s, width 0.3s, left 0.3s, right 0.3s",

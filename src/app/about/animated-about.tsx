@@ -381,10 +381,10 @@ export function AnimatedAbout() {
   return (
     <section
       ref={sectionRef}
-      className="h-screen about-section flex flex-col justify-center items-center px-6 transition-colors duration-700 bg-[#111] text-white"
+      className="h-screen about-section flex flex-col justify-center items-center px-4 md:px-6 transition-colors duration-700 bg-[#111] text-white"
     >
       <div
-        className="headline text-3xl md:text-5xl font-bold flex flex-wrap justify-center mb-4 text-center leading-[76px]"
+        className="headline text-xl sm:text-2xl md:text-4xl lg:text-5xl font-bold flex flex-wrap justify-center mb-4 text-center leading-tight sm:leading-[50px] md:leading-[76px]"
         style={{
           opacity: headlineVisible ? 1 : 0,
           transition: "opacity 0.5s cubic-bezier(0.4,0,0.2,1)",
@@ -419,19 +419,6 @@ export function AnimatedAbout() {
               // Only the last white (highlighted) char shows the indicator
               const showCursor = thisCharIdx === lastWhiteIndex;
 
-              // SLOW DOWN: Make cursor blink slower (from 1s to 1.5s)
-              let cursorStyle: React.CSSProperties = {
-                boxShadow: "0 0 10px 2px #ff69b4, 0 0 6px 1.5px #ff69b4",
-                animation: "blink-cursor 1.5s steps(1) infinite",
-                opacity: showCursor ? 1 : 0,
-                pointerEvents: "none",
-                right: "-0.08em",
-                left: "auto",
-                transform: "translateY(-50%)",
-                top: "50%",
-                transition: "left 0.05s linear",
-              };
-
               // Optionally, for "design" chars, add a transition for text-stroke
               if (
                 thisCharIdx >= designStartCharIdx &&
@@ -444,15 +431,25 @@ export function AnimatedAbout() {
               return (
                 <span
                   key={`headline1-${idx}-char-${charIdx}`}
-                  className="char inline-block text-[#1A1C1F] font-normal leading-[125%] text-[50px] relative"
+                  className="char inline-block text-[#1A1C1F] font-normal leading-[125%] text-lg sm:text-2xl md:text-4xl lg:text-[50px] relative"
                   style={style}
                 >
                   {char}
-                  {/* Blinking cursor: only visible at the last highlighted position */}
-                  <span
-                    className="cursor-blink z-10 absolute h-[0.85em] w-[0.055em] bg-pink-400 rounded blink"
-                    style={cursorStyle}
-                  />
+                  {/* Blinking cursor: only rendered on the last highlighted character */}
+                  {showCursor && (
+                    <span
+                      className="cursor-blink z-10 absolute h-[0.85em] w-[0.055em] bg-pink-400 rounded"
+                      style={{
+                        boxShadow: "0 0 10px 2px #ff69b4, 0 0 6px 1.5px #ff69b4",
+                        animation: "blink-cursor 1.5s steps(1) infinite",
+                        pointerEvents: "none",
+                        right: "-0.08em",
+                        left: "auto",
+                        transform: "translateY(-50%)",
+                        top: "50%",
+                      }}
+                    />
+                  )}
                 </span>
               );
             })}
